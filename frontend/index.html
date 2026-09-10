@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Flash Flood Prediction System</title>
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+
+    <header class="navbar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                🌧️
+            </div>
+
+            <div>
+
+                <h1>
+                    Flash Flood Prediction
+                </h1>
+
+                <p>
+                    AI-powered flood risk monitoring
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="status">
+
+            <span class="status-dot"></span>
+
+            API Online
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =========================
+         MAIN
+    ========================== -->
+
+    <main class="container">
+
+
+        <!-- =========================
+             HERO
+        ========================== -->
+
+        <section class="hero">
+
+            <div>
+
+                <span class="badge">
+                    RANDOM FOREST MODEL
+                </span>
+
+
+                <h2>
+                    Predict Flash Flood Risk
+                </h2>
+
+
+                <p>
+                    Enter rainfall and terrain conditions
+                    to estimate the probability of a flash flood.
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================
+             DASHBOARD
+        ========================== -->
+
+        <section class="dashboard">
+
+
+            <!-- =========================
+                 INPUT PANEL
+            ========================== -->
+
+            <div class="card input-card">
+
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h3>
+                            Environmental Conditions
+                        </h3>
+
+                        <p>
+                            Enter the current measurements
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <form id="predictionForm">
+
+
+                    <div class="input-grid">
+
+
+                        <!-- CURRENT RAINFALL -->
+
+                        <div class="input-group">
+
+                            <label for="rainfall_mm_hr">
+
+                                Current Rainfall
+                                <span>(mm/hr)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="rainfall_mm_hr"
+                                step="0.000001"
+                                min="0"
+                                placeholder="e.g. 36.020000"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- ELEVATION -->
+
+                        <div class="input-group">
+
+                            <label for="elevation_m">
+
+                                Elevation
+                                <span>(m)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="elevation_m"
+                                step="0.000001"
+                                min="0"
+                                placeholder="e.g. 1755.000000"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- SLOPE -->
+
+                        <div class="input-group">
+
+                            <label for="slope_degree">
+
+                                Slope
+                                <span>(degrees)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="slope_degree"
+                                step="0.000001"
+                                min="0"
+                                max="90"
+                                placeholder="e.g. 40.387863"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- LATITUDE -->
+
+                        <div class="input-group">
+
+                            <label for="latitude">
+
+                                Latitude
+                                <span>(decimal degrees)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="latitude"
+                                step="0.00000001"
+                                min="-90"
+                                max="90"
+                                placeholder="e.g. 29.84999847"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- LONGITUDE -->
+
+                        <div class="input-group">
+
+                            <label for="longitude">
+
+                                Longitude
+                                <span>(decimal degrees)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="longitude"
+                                step="0.00000001"
+                                min="-180"
+                                max="180"
+                                placeholder="e.g. 80.04999542"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- 1 HOUR -->
+
+                        <div class="input-group">
+
+                            <label for="rain_1h">
+
+                                Rainfall — 1 Hour
+                                <span>(mm)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="rain_1h"
+                                step="0.000001"
+                                min="0"
+                                placeholder="e.g. 33.320000"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- 3 HOURS -->
+
+                        <div class="input-group">
+
+                            <label for="rain_3h">
+
+                                Rainfall — 3 Hours
+                                <span>(mm)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="rain_3h"
+                                step="0.000001"
+                                min="0"
+                                placeholder="e.g. 54.519999"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- 6 HOURS -->
+
+                        <div class="input-group">
+
+                            <label for="rain_6h">
+
+                                Rainfall — 6 Hours
+                                <span>(mm)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="rain_6h"
+                                step="0.000001"
+                                min="0"
+                                placeholder="e.g. 79.099999"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- 12 HOURS -->
+
+                        <div class="input-group">
+
+                            <label for="rain_12h">
+
+                                Rainfall — 12 Hours
+                                <span>(mm)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="rain_12h"
+                                step="0.000001"
+                                min="0"
+                                placeholder="e.g. 80.879999"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- 24 HOURS -->
+
+                        <div class="input-group">
+
+                            <label for="rain_24h">
+
+                                Rainfall — 24 Hours
+                                <span>(mm)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="rain_24h"
+                                step="0.000001"
+                                min="0"
+                                placeholder="e.g. 87.204998"
+                                required
+                            >
+
+                        </div>
+
+
+
+                        <!-- RAINFALL CHANGE -->
+
+                        <div class="input-group">
+
+                            <label for="rainfall_change">
+
+                                Rainfall Change
+                                <span>(mm/hr)</span>
+
+                            </label>
+
+                            <input
+                                type="number"
+                                id="rainfall_change"
+                                step="0.000001"
+                                placeholder="e.g. 5.400002"
+                                required
+                            >
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <!-- PREDICT BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="predict-button"
+                        id="predictButton"
+                    >
+
+                        <span>
+                            ⚡
+                        </span>
+
+                        Predict Flood Risk
+
+                    </button>
+
+
+                </form>
+
+            </div>
+
+
+
+            <!-- =========================
+                 RESULT PANEL
+            ========================== -->
+
+            <div class="card result-card">
+
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h3>
+                            Prediction Result
+                        </h3>
+
+                        <p>
+                            AI model assessment
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <div
+                    class="result-container"
+                    id="resultContainer"
+                >
+
+
+                    <div class="result-placeholder">
+
+                        <div class="placeholder-icon">
+                            🌊
+                        </div>
+
+
+                        <h3>
+                            Awaiting Prediction
+                        </h3>
+
+
+                        <p>
+                            Enter environmental conditions
+                            and run the prediction.
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =========================
+             RAINFALL SUMMARY
+        ========================== -->
+
+        <section class="rainfall-summary">
+
+
+            <div class="summary-header">
+
+                <div>
+
+                    <h3>
+                        Rainfall Summary
+                    </h3>
+
+                    <p>
+                        Current rainfall accumulation
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="rainfall-grid">
+
+
+                <div class="rainfall-card">
+
+                    <span>
+                        🌧️
+                    </span>
+
+                    <strong id="summary-current">
+                        —
+                    </strong>
+
+                    <small>
+                        Current (mm/hr)
+                    </small>
+
+                </div>
+
+
+
+                <div class="rainfall-card">
+
+                    <span>
+                        🕐
+                    </span>
+
+                    <strong id="summary-1h">
+                        —
+                    </strong>
+
+                    <small>
+                        1 Hour (mm)
+                    </small>
+
+                </div>
+
+
+
+                <div class="rainfall-card">
+
+                    <span>
+                        🕒
+                    </span>
+
+                    <strong id="summary-3h">
+                        —
+                    </strong>
+
+                    <small>
+                        3 Hours (mm)
+                    </small>
+
+                </div>
+
+
+
+                <div class="rainfall-card">
+
+                    <span>
+                        ⏱️
+                    </span>
+
+                    <strong id="summary-6h">
+                        —
+                    </strong>
+
+                    <small>
+                        6 Hours (mm)
+                    </small>
+
+                </div>
+
+
+
+                <div class="rainfall-card">
+
+                    <span>
+                        📊
+                    </span>
+
+                    <strong id="summary-12h">
+                        —
+                    </strong>
+
+                    <small>
+                        12 Hours (mm)
+                    </small>
+
+                </div>
+
+
+
+                <div class="rainfall-card">
+
+                    <span>
+                        📈
+                    </span>
+
+                    <strong id="summary-24h">
+                        —
+                    </strong>
+
+                    <small>
+                        24 Hours (mm)
+                    </small>
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =========================
+             MODEL INFORMATION
+        ========================== -->
+
+        <section class="info-grid">
+
+
+            <!-- ML -->
+
+            <div class="info-card">
+
+                <span class="info-icon">
+                    🤖
+                </span>
+
+                <div>
+
+                    <h4>
+                        Machine Learning
+                    </h4>
+
+                    <p>
+                        Random Forest classifier
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- RAINFALL -->
+
+            <div class="info-card">
+
+                <span class="info-icon">
+                    🌧️
+                </span>
+
+                <div>
+
+                    <h4>
+                        Rainfall Features
+                    </h4>
+
+                    <p>
+                        1h, 3h, 6h, 12h & 24h accumulation
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- TERRAIN -->
+
+            <div class="info-card">
+
+                <span class="info-icon">
+                    ⛰️
+                </span>
+
+                <div>
+
+                    <h4>
+                        Terrain Features
+                    </h4>
+
+                    <p>
+                        Elevation and slope included
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =========================
+         PREDICTION HISTORY
+    ========================== -->
+
+    <section class="history-section">
+
+        <div class="history-header">
+
+            <div>
+                <h3>Recent Predictions</h3>
+                <p>Your latest flood-risk assessments</p>
+            </div>
+
+            <button
+                type="button"
+                id="clearHistoryButton"
+                class="clear-history-button"
+            >
+                Clear History
+            </button>
+
+        </div>
+
+        <div id="predictionHistory" class="prediction-history">
+
+            <div class="history-empty">
+                <div class="history-empty-icon">📊</div>
+
+                <h3>No predictions yet</h3>
+
+                <p>
+                    Your recent predictions will appear here.
+                </p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer>
+
+        <p>
+            Flash Flood Prediction System ·
+            AI-based prototype
+        </p>
+
+    </footer>
+
+
+
+    <script src="app.js"></script>
+
+
+</body>
+
+</html>

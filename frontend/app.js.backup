@@ -1,0 +1,378 @@
+const API_URL = "http://127.0.0.1:8000";
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const form = document.getElementById("predictionForm");
+
+    if (!form) {
+        console.error("predictionForm not found");
+        return;
+    }
+
+    form.addEventListener("submit", async (event) => {
+
+        // IMPORTANT: prevent page refresh
+        event.preventDefault();
+
+        const button = document.getElementById("predictButton");
+
+        try {
+
+            // -----------------------------------------
+            // READ VALUES
+            // -----------------------------------------
+
+            const rainfall_mm_hr = Number(
+                document.getElementById("rainfall_mm_hr").value
+            );
+
+            const elevation_m = Number(
+                document.getElementById("elevation_m").value
+            );
+
+            const slope_degree = Number(
+                document.getElementById("slope_degree").value
+            );
+
+            const rain_1h = Number(
+                document.getElementById("rain_1h").value
+            );
+
+            const rain_3h = Number(
+                document.getElementById("rain_3h").value
+            );
+
+            const rain_6h = Number(
+                document.getElementById("rain_6h").value
+            );
+
+            const rain_12h = Number(
+                document.getElementById("rain_12h").value
+            );
+
+            const rain_24h = Number(
+                document.getElementById("rain_24h").value
+            );
+
+            const rainfall_change = Number(
+                document.getElementById("rainfall_change").value
+            );
+
+            // Latitude and longitude are optional for prediction
+            // if your backend does not use them.
+            const latitudeElement =
+                document.getElementById("latitude");
+
+            const longitudeElement =
+                document.getElementById("longitude");
+
+            const latitude = latitudeElement
+                ? Number(latitudeElement.value)
+                : null;
+
+            const longitude = longitudeElement
+                ? Number(longitudeElement.value)
+                : null;
+
+
+            // -----------------------------------------
+            // VALIDATION
+            // -----------------------------------------
+
+            const values = [
+                rainfall_mm_hr,
+                elevation_m,
+                slope_degree,
+                rain_1h,
+                rain_3h,
+                rain_6h,
+                rain_12h,
+                rain_24h,
+                rainfall_change
+            ];
+
+            if (values.some(value => !Number.isFinite(value))) {
+
+                showError(
+                    "Please enter valid values in all rainfall and terrain fields."
+                );
+
+                return;
+            }
+
+
+            // -----------------------------------------
+            // LOCATION VALIDATION
+            // -----------------------------------------
+
+            if (latitudeElement && longitudeElement) {
+
+                if (
+                    !Number.isFinite(latitude) ||
+                    !Number.isFinite(longitude)
+                ) {
+                    showError(
+                        "Please enter valid latitude and longitude."
+                    );
+
+                    return;
+                }
+
+                if (
+                    latitude < -90 ||
+                    latitude > 90 ||
+                    longitude < -180 ||
+                    longitude > 180
+                ) {
+                    showError(
+                        "Latitude must be between -90 and 90, and longitude between -180 and 180."
+                    );
+
+                    return;
+                }
+
+                const locationDisplay =
+                    document.getElementById("locationDisplay");
+
+                if (locationDisplay) {
+                    locationDisplay.textContent =
+                        `📍 ${latitude.toFixed(8)}, ${longitude.toFixed(8)}`;
+                }
+            }
+
+
+            // -----------------------------------------
+            // LOADING
+            // -----------------------------------------
+
+            button.disabled = true;
+
+            button.innerHTML = `
+                <span>⏳</span>
+                Predicting...
+            `;
+
+
+            // -----------------------------------------
+            // REQUEST
+            // -----------------------------------------
+
+            const requestData = {
+
+                rainfall_mm_hr: rainfall_mm_hr,
+
+                elevation_m: elevation_m,
+
+                slope_degree: slope_degree,
+
+                rain_1h: rain_1h,
+
+                rain_3h: rain_3h,
+
+                rain_6h: rain_6h,
+
+                rain_12h: rain_12h,
+
+                rain_24h: rain_24h,
+
+                rainfall_change: rainfall_change
+            };
+
+
+            console.log(
+                "Sending prediction request:",
+                requestData
+            );
+
+
+            const response = await fetch(
+                `${API_URL}/predict`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(requestData)
+                }
+            );
+
+
+            // -----------------------------------------
+            // API ERROR
+            // -----------------------------------------
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    `API error ${response.status}: ${errorText}`
+                );
+            }
+
+
+            // -----------------------------------------
+            // RESULT
+            // -----------------------------------------
+
+            const result =
+                await response.json();
+
+            console.log(
+                "Prediction result:",
+                result
+            );
+
+
+            displayResult(result);
+
+
+        } catch (error) {
+
+            console.error(
+                "Prediction error:",
+                error
+            );
+
+            showError(
+                error.message
+            );
+
+        } finally {
+
+            button.disabled = false;
+
+            button.innerHTML = `
+                <span>⚡</span>
+                Predict Flood Risk
+            `;
+        }
+
+    });
+
+});
+
+
+// ==================================================
+// DISPLAY RESULT
+// ==================================================
+
+function displayResult(result) {
+     updateRainfallSummary();
+    const container =
+        document.getElementById("resultContainer");
+
+    if (!container) {
+        console.error("resultContainer not found");
+        return;
+    }
+
+
+    const probability =
+        Number(result.flood_probability) * 100;
+
+    const probabilityText =
+        probability.toFixed(2);
+
+    const isFlood =
+        Number(result.prediction) === 1;
+
+    const risk =
+        result.risk_level;
+
+
+    container.innerHTML = `
+
+        <div class="result-content">
+
+            <div class="result-icon">
+                ${isFlood ? "⚠️" : "✅"}
+            </div>
+
+            <div class="risk-label">
+                RISK LEVEL
+            </div>
+
+            <div class="risk-level
+                ${risk === "HIGH"
+                    ? "risk-high"
+                    : risk === "MEDIUM"
+                        ? "risk-medium"
+                        : "risk-low"
+                }">
+
+                ${risk}
+
+            </div>
+
+            <div class="probability">
+
+                <div class="probability-value">
+                    ${probabilityText}%
+                </div>
+
+                <div class="probability-label">
+                    Flood Probability
+                </div>
+
+            </div>
+
+            <p class="prediction-text">
+
+                ${
+                    isFlood
+                        ? "⚠️ Flood conditions detected"
+                        : "✅ No significant flood conditions detected"
+                }
+
+            </p>
+
+            <p class="prediction-text">
+
+                Model Prediction:
+                <strong>
+                    ${isFlood ? "FLOOD" : "NO FLOOD"}
+                </strong>
+
+            </p>
+
+        </div>
+    `;
+}
+
+
+// ==================================================
+// DISPLAY ERROR
+// ==================================================
+
+function showError(message) {
+
+    const container =
+        document.getElementById("resultContainer");
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = `
+
+        <div class="result-placeholder">
+
+            <div class="placeholder-icon">
+                ❌
+            </div>
+
+            <h3>
+                Prediction Failed
+            </h3>
+
+            <p>
+                ${message}
+            </p>
+
+        </div>
+    `;
+}
