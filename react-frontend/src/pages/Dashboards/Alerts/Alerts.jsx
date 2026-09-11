@@ -517,7 +517,7 @@ function Alerts({ onNavigate }) {
                                 }}
                             >
                                 <Bell size={21} />
-                                <span>7</span>
+                                {apiAlerts.length > 0 && <span>{apiAlerts.length}</span>}
                             </button>
 
                             {notificationsOpen && (

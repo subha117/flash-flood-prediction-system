@@ -8,7 +8,7 @@ import "./Navbar.css";
 const API_URL = "http://127.0.0.1:8000/api";
 
 function Navbar({ title, subtitle }) {
-  const { updateLocation } = useContext(LocationContext);
+  const { updateLocation, alerts } = useContext(LocationContext);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -91,7 +91,7 @@ function Navbar({ title, subtitle }) {
         <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div className="navbar-notification">
             <Bell size={18} />
-            <span>3</span>
+            {alerts && alerts.length > 0 && <span>{alerts.length}</span>}
           </div>
 
           <div className="navbar-profile-container" ref={profileDropdownRef}>

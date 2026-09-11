@@ -581,13 +581,11 @@ body::-webkit-scrollbar {
   display: grid;
 
   grid-template-columns:
-    minmax(0, 1.55fr)
-    minmax(0, 1.25fr)
-    minmax(210px, 0.68fr);
+    minmax(0, 1.5fr)
+    minmax(0, 1fr);
 
   grid-template-rows:
-    270px
-    205px;
+    minmax(400px, auto);
 
   gap: 12px;
 
@@ -1868,9 +1866,7 @@ body::-webkit-scrollbar {
   }
 
   .dashboard-middle-grid {
-    grid-template-rows:
-      300px
-      220px;
+    grid-template-rows: minmax(400px, auto);
   }
 
   .dashboard-bottom-grid {
@@ -1911,10 +1907,7 @@ body::-webkit-scrollbar {
       minmax(0, 1.4fr)
       minmax(0, 1fr);
 
-    grid-template-rows:
-      300px
-      220px
-      auto;
+    grid-template-rows: minmax(400px, auto);
   }
 
   .risk-map-panel {
