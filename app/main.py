@@ -6,12 +6,17 @@ from datetime import datetime
 from app.database.database import engine, Base, get_db
 from app.models.prediction import Prediction, Alert
 from app.models.user import User  # noqa: F401 — ensure users table is created
+from app.models.user_settings import UserSettings  # noqa: F401
+from app.models.activity_log import ActivityLog  # noqa: F401
 from app.schemas.prediction import PredictionCreate, PredictionResponse, AlertResponse
 from app.services.ml_service import ml_service
 from app.services.weather_service import get_live_weather, get_rainfall_history
 from app.services.terrain_service import get_terrain_data
 from app.services.location_service import reverse_geocode, search_location
 from app.api.auth.routes import router as auth_router
+from app.api.settings import router as settings_router
+from app.api.activity import router as activity_router
+from app.api.admin import router as admin_router
 
 # Create DB tables if they don't exist
 Base.metadata.create_all(bind=engine)
@@ -26,8 +31,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount existing auth router
+# Mount routers
 app.include_router(auth_router, prefix="/api")
+app.include_router(settings_router, prefix="/api")
+app.include_router(activity_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 
 @app.get("/")
 @app.get("/health")

@@ -21,14 +21,24 @@ oauth2_scheme = OAuth2PasswordBearer(
 )
 
 
+from app.database.database import get_db
+from sqlalchemy.orm import Session
+from app.models.token_blacklist import TokenBlacklist
+
 def get_current_user_id(
     token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
 ) -> int:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    # Check if token is blacklisted
+    is_blacklisted = db.query(TokenBlacklist).filter(TokenBlacklist.token == token).first()
+    if is_blacklisted:
+        raise credentials_exception
 
     try:
         payload = jwt.decode(
@@ -43,6 +53,5 @@ def get_current_user_id(
             raise credentials_exception
 
         return int(user_id)
-
-    except (JWTError, ValueError):
+    except JWTError:
         raise credentials_exception

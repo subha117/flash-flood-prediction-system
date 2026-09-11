@@ -126,3 +126,18 @@ def get_me(
         )
 
     return user
+from app.models.token_blacklist import TokenBlacklist
+from app.core.auth import oauth2_scheme
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+def logout(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    # Add token to blacklist
+    is_blacklisted = db.query(TokenBlacklist).filter(TokenBlacklist.token == token).first()
+    if not is_blacklisted:
+        bl = TokenBlacklist(token=token)
+        db.add(bl)
+        db.commit()
+    return {"message": "Successfully logged out"}
