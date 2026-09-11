@@ -77,11 +77,18 @@ def get_rainfall_history(latitude: float, longitude: float):
             precips = daily.get("precipitation_sum", [])
             history = []
             
-            # The API returns 7 past days + current day (and future depending on forecast). 
-            # We want to make sure we just get past days.
-            # We just take all of them and the frontend slices the last 7 items.
+            # The API returns past days + current day + forecast.
+            # We want exactly the 7 days ending today (or the most recent 7 past days).
+            import datetime as dt
+            today_str = dt.datetime.utcnow().strftime("%Y-%m-%d")
+            
             for t, p in zip(times, precips):
                 history.append({"date": t, "rainfall": p})
+                
+            # Filter to dates <= today, then take last 7
+            history = [h for h in history if h["date"] <= today_str]
+            history = history[-7:]
+            
             return {"history": history, "data_source": "LIVE"}
     except Exception as e:
         print(f"Weather History API failed: {e}")

@@ -90,16 +90,17 @@ function Dashboard({ onNavigate }) {
 
   const activeAlertCount = alerts?.length || 0;
 
-  // Use only the last 7 days of history to prevent squishing
-  const displayHistory = history && history.length > 7 ? history.slice(-7) : (history || []);
+  // Use history directly (backend now returns exactly 7 days)
+  const displayHistory = history || [];
 
   const getChartPath = () => {
-    if (!displayHistory || displayHistory.length === 0) return "";
+    if (!displayHistory || displayHistory.length === 0) return { line: "", area: "" };
     const maxRain = Math.max(...displayHistory.map(h => h.rainfall || 0), 1);
     const w = 600, h = 220;
     const pts = displayHistory.map((item, i) => {
       const x = displayHistory.length > 1 ? (w / (displayHistory.length - 1)) * i : w / 2;
-      const y = h - (((item.rainfall || 0) / maxRain) * (h - 30));
+      // Add padding so line is not clipped at top (20px) or bottom (5px)
+      const y = (h - 5) - (((item.rainfall || 0) / maxRain) * (h - 35));
       return `${x} ${y}`;
     });
     const linePath = pts.map((p, i) => (i === 0 ? `M${p}` : `L${p}`)).join(" ");
@@ -236,22 +237,46 @@ function Dashboard({ onNavigate }) {
                   <div style={{ marginTop: "16px", display: "flex", flexDirection: "column" }}>
                     {displayHistory && displayHistory.length > 0 ? (
                       <>
-                        <svg viewBox="0 0 600 220" preserveAspectRatio="none" style={{ width: "100%", height: "220px" }}>
+                        <svg viewBox="0 0 600 260" preserveAspectRatio="none" style={{ width: "100%", height: "260px" }}>
                           <defs>
                             <linearGradient id="rfill" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
                               <stop offset="100%" stopColor="#2563eb" stopOpacity="0.02" />
                             </linearGradient>
                           </defs>
+                          
+                          {/* Grid lines (horizontal) */}
+                          <line x1="0" y1="215" x2="600" y2="215" stroke="#e2e8f0" strokeWidth="1" />
+                          <line x1="0" y1="125" x2="600" y2="125" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+                          <line x1="0" y1="35" x2="600" y2="35" stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 4" />
+
+                          {/* Area & Line */}
                           {chartPaths.area && <path d={chartPaths.area} fill="url(#rfill)" />}
-                          {chartPaths.line && <path d={chartPaths.line} fill="none" stroke="#2563eb" strokeWidth="2.5" />}
+                          {chartPaths.line && <path d={chartPaths.line} fill="none" stroke="#2563eb" strokeWidth="3" />}
+                          
+                          {/* Data points and labels */}
+                          {displayHistory.map((h, i) => {
+                            const maxRain = Math.max(...displayHistory.map(d => d.rainfall || 0), 1);
+                            const w = 600, svgH = 220;
+                            const x = displayHistory.length > 1 ? (w / (displayHistory.length - 1)) * i : w / 2;
+                            const y = (svgH - 5) - (((h.rainfall || 0) / maxRain) * (svgH - 35));
+                            
+                            return (
+                              <g key={`pt-${i}`}>
+                                {/* Point */}
+                                <circle cx={x} cy={y} r="4" fill="#ffffff" stroke="#2563eb" strokeWidth="2" />
+                                {/* Value label */}
+                                <text x={x} y={y - 12} textAnchor={i === 0 ? "start" : i === displayHistory.length - 1 ? "end" : "middle"} fill="#334155" fontSize="12px" fontWeight="600">
+                                  {fmt(h.rainfall, 1)}mm
+                                </text>
+                                {/* Date label */}
+                                <text x={x} y={svgH + 20} textAnchor={i === 0 ? "start" : i === displayHistory.length - 1 ? "end" : "middle"} fill="#64748b" fontSize="11px">
+                                  {h.date?.substring(5)}
+                                </text>
+                              </g>
+                            );
+                          })}
                         </svg>
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 4px 0", color: "#64748b", fontSize: "0.75rem" }}>
-                          {displayHistory.map((h, i) => <span key={i}>{h.date?.substring(5)}</span>)}
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 4px 0", color: "#334155", fontSize: "0.75rem", fontWeight: 600 }}>
-                          {displayHistory.map((h, i) => <span key={i}>{fmt(h.rainfall, 1)}mm</span>)}
-                        </div>
                       </>
                     ) : <p style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>No rainfall history available.</p>}
 
