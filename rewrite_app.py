@@ -1,4 +1,7 @@
+import os
 
+with open("frontend/app.js", "w") as f:
+    f.write("""
 const API_URL = "http://127.0.0.1:8000/api";
 
 let map;
@@ -276,3 +279,4 @@ function clearHistory() {
     localStorage.removeItem("flood_history");
     loadHistory();
 }
+""")

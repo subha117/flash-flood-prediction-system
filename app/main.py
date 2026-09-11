@@ -48,30 +48,41 @@ def health():
 @app.get("/api/features")
 def get_features(latitude: float, longitude: float):
     from app.services.weather_service import get_rainfall_data
-    import random
+    from app.services.terrain import get_terrain_data
     
-    # Mock terrain since arbitrary locations aren't in the DB
-    elevation_m = random.uniform(100, 2500)
-    slope_degree = random.uniform(0, 45)
-    
+    elevation_m, slope_degree = get_terrain_data(latitude, longitude)
+    terrain_error = None
+    if elevation_m is None or slope_degree is None:
+        terrain_error = "Terrain data is not available for this location."
+        
     try:
         weather = get_rainfall_data(latitude=latitude, longitude=longitude)
-    except Exception:
+    except Exception as e:
+        print(f"Weather error: {e}")
         weather = {
             "rain_1h": 0.0, "rain_3h": 0.0, "rain_6h": 0.0,
-            "rain_12h": 0.0, "rain_24h": 0.0
+            "rain_12h": 0.0, "rain_24h": 0.0,
+            "temperature": 0.0, "humidity": 0.0, "wind_speed": 0.0,
+            "data_source": "Error"
         }
         
-    return {
-        "elevation_m": elevation_m,
-        "slope_degree": slope_degree,
+    response = {
+        "elevation_m": elevation_m if elevation_m is not None else 0.0,
+        "slope_degree": slope_degree if slope_degree is not None else 0.0,
         "rainfall_mm_hr": weather.get("rain_1h", 0.0),
         "rain_1h": weather.get("rain_1h", 0.0),
         "rain_3h": weather.get("rain_3h", 0.0),
         "rain_6h": weather.get("rain_6h", 0.0),
         "rain_12h": weather.get("rain_12h", 0.0),
         "rain_24h": weather.get("rain_24h", 0.0),
+        "temperature": weather.get("temperature", 0.0),
+        "humidity": weather.get("humidity", 0.0),
+        "wind_speed": weather.get("wind_speed", 0.0),
+        "data_source": weather.get("data_source", "Unknown")
     }
+    if terrain_error:
+        response["error"] = terrain_error
+    return response
 
 from pydantic import BaseModel
 class LegacyPredictRequest(BaseModel):
@@ -130,3 +141,13 @@ def old_legacy_predict(request: LegacyPredictRequest):
 @app.get("/api/health")
 def api_health():
     return health()
+
+@app.get("/api/rainfall/history")
+def get_rainfall_history_endpoint(latitude: float, longitude: float):
+    from app.services.weather_service import get_rainfall_history
+    return get_rainfall_history(latitude, longitude)
+
+@app.get("/api/location")
+def get_location_endpoint(latitude: float, longitude: float):
+    from app.services.location import get_location_name
+    return get_location_name(latitude, longitude)

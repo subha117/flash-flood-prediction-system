@@ -1,4 +1,7 @@
+import os
 
+with open("frontend/style.css", "w") as f:
+    f.write("""
 :root {
     --primary: #1e3a8a;
     --primary-light: #3b82f6;
@@ -239,3 +242,4 @@ footer {
     font-size: 0.8rem;
     background: #e2e8f0;
 }
+""")
