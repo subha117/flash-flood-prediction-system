@@ -229,80 +229,82 @@ function Dashboard({ onNavigate }) {
                 </div>
 
                 {/* RAINFALL CHART */}
-                <div className="dashboard-panel rainfall-panel">
+                <div className="dashboard-panel rainfall-panel" style={{ display: "flex", flexDirection: "column" }}>
                   <div className="panel-header">
                     <h2>Rainfall Trend — 7 Days</h2>
                     {weather?.data_source && <span style={{ fontSize: "0.7rem", background: weather.data_source === "LIVE" ? "#dcfce7" : "#fef3c7", padding: "3px 8px", borderRadius: "4px" }}>{weather.data_source}</span>}
                   </div>
-                  <div style={{ marginTop: "16px", display: "flex", flexDirection: "column" }}>
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", marginTop: "16px", position: "relative" }}>
                     {displayHistory && displayHistory.length > 0 ? (
-                      <div style={{ position: "relative", width: "100%", height: "240px", marginTop: "10px" }}>
-                        {/* SVG Background for Line and Area */}
-                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "200px" }}>
-                          <defs>
-                            <linearGradient id="rfill" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
-                              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.00" />
-                            </linearGradient>
-                          </defs>
+                      <div style={{ flex: 1, position: "relative", width: "100%" }}>
+                        {/* Chart Area Container (leaves 24px at bottom for dates) */}
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: "24px" }}>
+                          {/* SVG Background for Line and Area */}
+                          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}>
+                            <defs>
+                              <linearGradient id="rfill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
+                                <stop offset="100%" stopColor="#2563eb" stopOpacity="0.00" />
+                              </linearGradient>
+                            </defs>
 
-                          {/* Horizontal Grid Lines */}
-                          <line x1="0" y1="90" x2="100" y2="90" stroke="#e2e8f0" strokeWidth="0.5" />
-                          <line x1="0" y1="50" x2="100" y2="50" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
-                          <line x1="0" y1="10" x2="100" y2="10" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
+                            {/* Horizontal Grid Lines */}
+                            <line x1="0" y1="90" x2="100" y2="90" stroke="#e2e8f0" strokeWidth="0.5" />
+                            <line x1="0" y1="50" x2="100" y2="50" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
+                            <line x1="0" y1="10" x2="100" y2="10" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
 
-                          {/* Line and Area Paths calculated with 0-100 coordinates */}
-                          <path d={(() => {
-                            if (!displayHistory || displayHistory.length === 0) return "";
-                            const maxRain = Math.max(...displayHistory.map(h => h.rainfall || 0), 1);
-                            return displayHistory.map((h, i) => {
-                              const x = 5 + (i / (displayHistory.length - 1)) * 90;
-                              const y = 90 - (((h.rainfall || 0) / maxRain) * 80);
-                              return (i === 0 ? `M${x} ${y}` : `L${x} ${y}`);
-                            }).join(" ") + ` L95 100 L5 100 Z`;
-                          })()} fill="url(#rfill)" />
-                          
-                          <path d={(() => {
-                            if (!displayHistory || displayHistory.length === 0) return "";
-                            const maxRain = Math.max(...displayHistory.map(h => h.rainfall || 0), 1);
-                            return displayHistory.map((h, i) => {
-                              const x = 5 + (i / (displayHistory.length - 1)) * 90;
-                              const y = 90 - (((h.rainfall || 0) / maxRain) * 80);
-                              return (i === 0 ? `M${x} ${y}` : `L${x} ${y}`);
-                            }).join(" ");
-                          })()} fill="none" stroke="#2563eb" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-                        </svg>
+                            {/* Line and Area Paths */}
+                            <path d={(() => {
+                              const maxRain = Math.max(...displayHistory.map(h => h.rainfall || 0), 1);
+                              return displayHistory.map((h, i) => {
+                                const x = 5 + (i / (displayHistory.length - 1)) * 90;
+                                const y = 90 - (((h.rainfall || 0) / maxRain) * 80);
+                                return (i === 0 ? `M${x} ${y}` : `L${x} ${y}`);
+                              }).join(" ") + ` L95 100 L5 100 Z`;
+                            })()} fill="url(#rfill)" />
+                            
+                            <path d={(() => {
+                              const maxRain = Math.max(...displayHistory.map(h => h.rainfall || 0), 1);
+                              return displayHistory.map((h, i) => {
+                                const x = 5 + (i / (displayHistory.length - 1)) * 90;
+                                const y = 90 - (((h.rainfall || 0) / maxRain) * 80);
+                                return (i === 0 ? `M${x} ${y}` : `L${x} ${y}`);
+                              }).join(" ");
+                            })()} fill="none" stroke="#2563eb" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                          </svg>
 
-                        {/* HTML Overlays for Dots and Labels (prevents distortion and clipping) */}
-                        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "200px" }}>
-                          {displayHistory && displayHistory.length > 0 && displayHistory.map((h, i) => {
+                          {/* HTML Overlays for Dots and Values */}
+                          {displayHistory.map((h, i) => {
                             const maxRain = Math.max(...displayHistory.map(d => d.rainfall || 0), 1);
                             const x = 5 + (i / (displayHistory.length - 1)) * 90;
                             const y = 90 - (((h.rainfall || 0) / maxRain) * 80);
 
                             return (
-                              <React.Fragment key={`overlay-${i}`}>
-                                {/* Dot and Rainfall Value */}
-                                <div style={{ position: "absolute", left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)", zIndex: 10 }}>
-                                  <div style={{ position: "relative" }}>
-                                    <div style={{ width: "8px", height: "8px", background: "#fff", border: "2px solid #2563eb", borderRadius: "50%", boxShadow: "0 0 0 2px rgba(255,255,255,0.5)" }}></div>
-                                    <div style={{ position: "absolute", bottom: "100%", left: "50%", transform: "translate(-50%, 0)", paddingBottom: "6px", fontSize: "11px", fontWeight: "600", color: "#334155", whiteSpace: "nowrap" }}>
-                                      {fmt(h.rainfall, 1)}mm
-                                    </div>
+                              <div key={`dot-${i}`} style={{ position: "absolute", left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)", zIndex: 10 }}>
+                                <div style={{ position: "relative" }}>
+                                  <div style={{ width: "8px", height: "8px", background: "#fff", border: "2px solid #2563eb", borderRadius: "50%", boxShadow: "0 0 0 2px rgba(255,255,255,0.5)" }}></div>
+                                  <div style={{ position: "absolute", bottom: "100%", left: "50%", transform: "translate(-50%, -4px)", paddingBottom: "2px", fontSize: "11px", fontWeight: "600", color: "#334155", whiteSpace: "nowrap" }}>
+                                    {fmt(h.rainfall, 1)}mm
                                   </div>
                                 </div>
-                                
-                                {/* Date Label at the bottom (below the 200px chart area) */}
-                                <div style={{ position: "absolute", left: `${x}%`, top: "200px", transform: "translateX(-50%)", fontSize: "11px", color: "#64748b", whiteSpace: "nowrap", marginTop: "12px" }}>
-                                  {h.date?.substring(5)}
-                                </div>
-                              </React.Fragment>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {/* Dates Overlay */}
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "24px" }}>
+                          {displayHistory.map((h, i) => {
+                            const x = 5 + (i / (displayHistory.length - 1)) * 90;
+                            return (
+                              <div key={`date-${i}`} style={{ position: "absolute", left: `${x}%`, bottom: "0", transform: "translateX(-50%)", fontSize: "11px", color: "#64748b", whiteSpace: "nowrap" }}>
+                                {h.date?.substring(5)}
+                              </div>
                             );
                           })}
                         </div>
                       </div>
                     ) : <p style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>No rainfall history available.</p>}
-
                   </div>
                 </div>
               </section>
