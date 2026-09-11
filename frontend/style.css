@@ -1022,3 +1022,21 @@ footer {
     }
 
 }
+
+/* ==================================================
+   MAP
+================================================== */
+
+.map-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+    margin-bottom: 15px;
+}
+
+.map-controls .input-group {
+    margin-bottom: 0;
+    flex: 1;
+    min-width: 150px;
+}
