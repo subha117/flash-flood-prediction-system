@@ -107,6 +107,30 @@ def get_alerts(db: Session = Depends(get_db)):
 
 # Legacy compat
 from pydantic import BaseModel
+
+class BroadcastRequest(BaseModel):
+    message: str
+    location_name: str
+    latitude: float = 0.0
+    longitude: float = 0.0
+    risk_level: str = "CRITICAL"
+
+@app.post("/api/alerts/broadcast")
+def broadcast_alert(req: BroadcastRequest, db: Session = Depends(get_db)):
+    alert = Alert(
+        location_name=req.location_name,
+        latitude=req.latitude,
+        longitude=req.longitude,
+        risk_level=req.risk_level,
+        probability=1.0,
+        reason=req.message,
+        data_source="GOV_BROADCAST"
+    )
+    db.add(alert)
+    db.commit()
+    db.refresh(alert)
+    return alert
+
 class LegacyPredictRequest(BaseModel):
     rainfall_mm_hr: float
     elevation_m: float

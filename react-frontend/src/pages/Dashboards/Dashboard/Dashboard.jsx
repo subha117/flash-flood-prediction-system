@@ -243,22 +243,23 @@ function Dashboard({ onNavigate }) {
                           <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}>
                             <defs>
                               <linearGradient id="rfill" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
-                                <stop offset="100%" stopColor="#2563eb" stopOpacity="0.00" />
+                                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.3" />
+                                <stop offset="100%" stopColor="#2563eb" stopOpacity="0.02" />
                               </linearGradient>
                             </defs>
 
                             {/* Horizontal Grid Lines */}
-                            <line x1="0" y1="90" x2="100" y2="90" stroke="#e2e8f0" strokeWidth="0.5" />
-                            <line x1="0" y1="50" x2="100" y2="50" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
-                            <line x1="0" y1="10" x2="100" y2="10" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
+                            <line x1="0" y1="95" x2="100" y2="95" stroke="#e2e8f0" strokeWidth="0.5" />
+                            <line x1="0" y1="65" x2="100" y2="65" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
+                            <line x1="0" y1="35" x2="100" y2="35" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
+                            <line x1="0" y1="5" x2="100" y2="5" stroke="#f1f5f9" strokeWidth="0.5" strokeDasharray="2 2" />
 
                             {/* Line and Area Paths */}
                             <path d={(() => {
                               const maxRain = Math.max(...displayHistory.map(h => h.rainfall || 0), 1);
                               return displayHistory.map((h, i) => {
                                 const x = 5 + (i / (displayHistory.length - 1)) * 90;
-                                const y = 90 - (((h.rainfall || 0) / maxRain) * 80);
+                                const y = 95 - (((h.rainfall || 0) / maxRain) * 90);
                                 return (i === 0 ? `M${x} ${y}` : `L${x} ${y}`);
                               }).join(" ") + ` L95 100 L5 100 Z`;
                             })()} fill="url(#rfill)" />
@@ -267,7 +268,7 @@ function Dashboard({ onNavigate }) {
                               const maxRain = Math.max(...displayHistory.map(h => h.rainfall || 0), 1);
                               return displayHistory.map((h, i) => {
                                 const x = 5 + (i / (displayHistory.length - 1)) * 90;
-                                const y = 90 - (((h.rainfall || 0) / maxRain) * 80);
+                                const y = 95 - (((h.rainfall || 0) / maxRain) * 90);
                                 return (i === 0 ? `M${x} ${y}` : `L${x} ${y}`);
                               }).join(" ");
                             })()} fill="none" stroke="#2563eb" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
@@ -277,7 +278,7 @@ function Dashboard({ onNavigate }) {
                           {displayHistory.map((h, i) => {
                             const maxRain = Math.max(...displayHistory.map(d => d.rainfall || 0), 1);
                             const x = 5 + (i / (displayHistory.length - 1)) * 90;
-                            const y = 90 - (((h.rainfall || 0) / maxRain) * 80);
+                            const y = 95 - (((h.rainfall || 0) / maxRain) * 90);
 
                             return (
                               <div key={`dot-${i}`} style={{ position: "absolute", left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)", zIndex: 10 }}>

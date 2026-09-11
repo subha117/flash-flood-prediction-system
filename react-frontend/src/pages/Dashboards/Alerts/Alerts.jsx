@@ -371,8 +371,37 @@ function Alerts({ onNavigate }) {
     const [rowsPerPage, setRowsPerPage] = useState(7);
     const [mapZoom, setMapZoom] = useState(1);
 
+    const [apiAlerts, setApiAlerts] = useState([]);
+    
+    useEffect(() => {
+        fetch('http://127.0.0.1:8000/api/alerts')
+            .then(r => r.json())
+            .then(data => {
+                const formatted = data.map(a => ({
+                    id: `API-${a.id}`,
+                    location: a.location_name || "Unknown",
+                    district: a.location_name || "Unknown",
+                    risk: a.risk_level,
+                    type: a.data_source === "GOV_BROADCAST" ? "Gov Broadcast" : "Automated Alert",
+                    triggered: new Date(a.timestamp).toLocaleString(),
+                    validUntil: "N/A",
+                    probability: Math.round(a.probability * 100),
+                    status: a.resolved ? "Resolved" : "Active",
+                    description: a.reason,
+                    impact: a.risk_level === "CRITICAL" ? "Immediate action required" : "Stay alert",
+                    lat: a.latitude || 30.372,
+                    top: 50,
+                    color: a.risk_level === "CRITICAL" ? "red" : "orange",
+                }));
+                setApiAlerts(formatted);
+            })
+            .catch(console.error);
+    }, []);
+
+    const allAlerts = useMemo(() => [...apiAlerts, ...ALERTS_DATA], [apiAlerts]);
+
     const filteredAlerts = useMemo(() => {
-        return ALERTS_DATA.filter((alert) => {
+        return allAlerts.filter((alert) => {
             const query = search.trim().toLowerCase();
 
             const matchesSearch =
@@ -405,7 +434,7 @@ function Alerts({ onNavigate }) {
                 matchesMap
             );
         });
-    }, [search, district, risk, type, activeOnly, mapMode]);
+    }, [allAlerts, search, district, risk, type, activeOnly, mapMode]);
 
     const totalPages = Math.max(1, Math.ceil(filteredAlerts.length / rowsPerPage));
 
@@ -414,16 +443,16 @@ function Alerts({ onNavigate }) {
         return filteredAlerts.slice(start, start + rowsPerPage);
     }, [filteredAlerts, page, rowsPerPage]);
 
-    const recentCritical = ALERTS_DATA.filter(
+    const recentCritical = allAlerts.filter(
         (alert) => alert.risk === "CRITICAL"
     ).slice(0, 3);
 
     const counts = {
-        critical: 3,
-        high: 8,
-        moderate: 15,
-        low: 27,
-        total: 53,
+        critical: allAlerts.filter(a => a.risk === "CRITICAL").length,
+        high: allAlerts.filter(a => a.risk === "HIGH").length,
+        moderate: allAlerts.filter(a => a.risk === "MODERATE").length,
+        low: allAlerts.filter(a => a.risk === "LOW").length,
+        total: allAlerts.length,
     };
 
     const clearFilters = () => {
@@ -447,7 +476,7 @@ function Alerts({ onNavigate }) {
         window.location.href = "/";
     };
 
-    const mapMarkers = ALERTS_DATA.filter((alert) => {
+    const mapMarkers = allAlerts.filter((alert) => {
         if (mapMode === "All") return true;
         if (mapMode === "Critical") return alert.risk === "CRITICAL";
         return alert.risk === mapMode;

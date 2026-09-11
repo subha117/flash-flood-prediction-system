@@ -34,11 +34,34 @@ export default function GovDashboard({ onNavigate, onHome }) {
   const handleBroadcast = async () => {
     if (!broadcastMsg.trim()) { setBroadcastStatus('Please enter a message.'); return; }
     setBroadcastStatus('Broadcasting...');
-    // In a full system this would push to a notification queue / SMS gateway
-    // For now we save it as a prediction note / log
-    await new Promise(r => setTimeout(r, 800));
-    setBroadcastStatus(`✅ Alert broadcasted: "${broadcastMsg}"`);
-    setBroadcastMsg('');
+    
+    try {
+      const response = await fetch(`${API}/alerts/broadcast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          message: broadcastMsg,
+          location_name: location?.name || 'All Regions',
+          latitude: location?.latitude || 0,
+          longitude: location?.longitude || 0,
+          risk_level: prediction?.risk_level || 'CRITICAL'
+        })
+      });
+      
+      if (!response.ok) throw new Error('Broadcast failed');
+      
+      const newAlert = await response.json();
+      setAlerts(prev => [newAlert, ...prev]);
+      
+      setBroadcastStatus(`✅ Alert broadcasted: "${broadcastMsg}"`);
+      setBroadcastMsg('');
+    } catch (err) {
+      console.error(err);
+      setBroadcastStatus('❌ Failed to broadcast alert.');
+    }
   };
 
   const navItems = [
