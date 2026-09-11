@@ -1,3 +1,11 @@
+import os
+
+def write_file(path, content):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w') as f:
+        f.write(content.strip() + '\n')
+
+write_file("app/main.py", """
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -5,13 +13,11 @@ from datetime import datetime
 
 from app.database.database import engine, Base, get_db
 from app.models.prediction import Prediction, Alert
-from app.models.user import User  # noqa: F401 — ensure users table is created
 from app.schemas.prediction import PredictionCreate, PredictionResponse, AlertResponse
 from app.services.ml_service import ml_service
 from app.services.weather_service import get_live_weather, get_rainfall_history
 from app.services.terrain_service import get_terrain_data
 from app.services.location_service import reverse_geocode, search_location
-from app.api.auth.routes import router as auth_router
 
 # Create DB tables if they don't exist
 Base.metadata.create_all(bind=engine)
@@ -26,9 +32,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount existing auth router
-app.include_router(auth_router, prefix="/api")
-
 @app.get("/")
 @app.get("/health")
 @app.get("/api/health")
@@ -40,7 +43,6 @@ def get_location(latitude: float, longitude: float):
     return reverse_geocode(latitude, longitude)
 
 @app.get("/api/locations/search")
-@app.get("/api/location/search")
 def get_location_search(q: str):
     return search_location(q)
 
@@ -60,16 +62,7 @@ def get_history(latitude: float, longitude: float):
 
 @app.post("/api/predictions", response_model=PredictionResponse)
 def create_prediction(pred: PredictionCreate, db: Session = Depends(get_db)):
-    # Run ML Model
-    ml_result = ml_service.predict(pred.dict())
-    
-    # Save to DB
-    pred_data = pred.dict()
-    pred_data["prediction"] = ml_result["prediction"]
-    pred_data["flood_probability"] = ml_result["flood_probability"]
-    pred_data["risk_level"] = ml_result["risk_level"]
-    
-    db_pred = Prediction(**pred_data)
+    db_pred = Prediction(**pred.dict())
     db.add(db_pred)
     db.commit()
     db.refresh(db_pred)
@@ -113,3 +106,5 @@ class LegacyPredictRequest(BaseModel):
 @app.post("/predict")
 def predict_legacy(req: LegacyPredictRequest):
     return ml_service.predict(req.dict())
+""")
+print("API endpoints scaffolded.")

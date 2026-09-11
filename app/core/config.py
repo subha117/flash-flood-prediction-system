@@ -1,19 +1,15 @@
 import os
-
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+# Fallback to sqlite if postgres is not provided in development
+_default_db = "sqlite:///./flashflood.db" if ENVIRONMENT != "production" else ""
+DATABASE_URL = os.getenv("DATABASE_URL", _default_db)
+if not DATABASE_URL and ENVIRONMENT == "production":
+    raise RuntimeError("DATABASE_URL must be set in production")
 
-def get_required_env(name: str) -> str:
-    value = os.getenv(name)
+print(f"[*] Starting in {ENVIRONMENT} mode. DB: {DATABASE_URL}")
 
-    if not value:
-        raise RuntimeError(f"{name} is not set in .env")
-
-    return value
-
-
-DATABASE_URL = get_required_env("DATABASE_URL")
-JWT_SECRET_KEY = get_required_env("JWT_SECRET_KEY")
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "")

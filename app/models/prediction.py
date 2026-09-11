@@ -1,101 +1,43 @@
 from datetime import datetime, timezone
-
-from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
-
-from app.database.base import Base
-
+from sqlalchemy import Column, Integer, Float, String, DateTime, Boolean
+from app.database.database import Base
 
 class Prediction(Base):
     __tablename__ = "predictions"
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    location_name = Column(String, index=True)
+    district = Column(String)
+    state = Column(String)
+    
+    # ML Features
+    rainfall_mm_hr = Column(Float)
+    elevation_m = Column(Float, nullable=True)
+    slope_degree = Column(Float, nullable=True)
+    rain_1h = Column(Float)
+    rain_3h = Column(Float)
+    rain_6h = Column(Float)
+    rain_12h = Column(Float)
+    rain_24h = Column(Float)
+    rainfall_change = Column(Float)
+    
+    # Results
+    prediction = Column(Integer)
+    flood_probability = Column(Float)
+    risk_level = Column(String)
+    data_source = Column(String)
 
-    __table_args__ = (
-        Index(
-            "ix_predictions_user_created_at",
-            "user_id",
-            "created_at",
-        ),
-    )
-
-    id: Mapped[int] = mapped_column(
-        primary_key=True,
-        index=True,
-    )
-
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
-        nullable=False,
-        index=True,
-    )
-
-    location_id: Mapped[int] = mapped_column(
-        ForeignKey("locations.id"),
-        nullable=False,
-        index=True,
-    )
-
-    rainfall_mm_hr: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    elevation_m: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    slope_degree: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    rain_1h: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    rain_3h: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    rain_6h: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    rain_12h: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    rain_24h: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    rainfall_change: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    prediction: Mapped[int] = mapped_column(
-        Integer,
-        nullable=False,
-    )
-
-    flood_probability: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-    )
-
-    risk_level: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False,
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        nullable=False,
-    )
+class Alert(Base):
+    __tablename__ = "alerts"
+    id = Column(Integer, primary_key=True, index=True)
+    location_name = Column(String, index=True)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    risk_level = Column(String)
+    probability = Column(Float)
+    reason = Column(String)
+    data_source = Column(String)
+    resolved = Column(Boolean, default=False)
