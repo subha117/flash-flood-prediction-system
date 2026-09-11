@@ -67,8 +67,9 @@ def get_features(latitude: float, longitude: float):
         }
         
     response = {
-        "elevation_m": elevation_m if elevation_m is not None else 0.0,
-        "slope_degree": slope_degree if slope_degree is not None else 0.0,
+        "terrain_available": not bool(terrain_error),
+        "elevation_m": elevation_m,
+        "slope_degree": slope_degree,
         "rainfall_mm_hr": weather.get("rain_1h", 0.0),
         "rain_1h": weather.get("rain_1h", 0.0),
         "rain_3h": weather.get("rain_3h", 0.0),

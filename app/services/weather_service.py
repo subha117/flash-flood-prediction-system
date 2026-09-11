@@ -4,16 +4,12 @@ from datetime import datetime, timedelta
 import random
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
-WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 
 def get_rainfall_data(latitude: float, longitude: float) -> dict:
     """
     Fetches current weather and recent rainfall data.
-    If WEATHER_API_KEY is not set, it acts as a fallback using dataset/demo mode.
+    If the API request fails, it acts as a fallback using dataset/demo mode.
     """
-    if not WEATHER_API_KEY:
-        # Fallback to Dataset / Demo Data mode
-        return _get_demo_rainfall_data(latitude, longitude)
     
     # Live data mode
     params = {
@@ -62,9 +58,6 @@ def get_rainfall_history(latitude: float, longitude: float) -> dict:
     """
     Fetches 7 days of rainfall history.
     """
-    if not WEATHER_API_KEY:
-        return _get_demo_rainfall_history(latitude, longitude)
-        
     params = {
         "latitude": latitude,
         "longitude": longitude,
