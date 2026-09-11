@@ -686,7 +686,7 @@ body::-webkit-scrollbar {
 
 .risk-map-panel {
   grid-column: 1;
-  grid-row: 1 / span 2;
+  grid-row: 1;
 }
 
 
@@ -1912,7 +1912,7 @@ body::-webkit-scrollbar {
 
   .risk-map-panel {
     grid-column: 1;
-    grid-row: 1 / span 2;
+    grid-row: 1;
   }
 
   .rainfall-panel {
