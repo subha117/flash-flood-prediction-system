@@ -1,0 +1,610 @@
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.sidebar {
+  width: 248px;
+  min-width: 248px;
+  max-width: 248px;
+  height: 100vh;
+
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 20px 15px 18px;
+
+  background: linear-gradient(
+    180deg,
+    #03182d 0%,
+    #021427 100%
+  );
+
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+
+  z-index: 9999;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: none;
+  box-sizing: border-box;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.sidebar-brand {
+  width: 100%;
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 8px;
+  margin: 0 0 22px;
+
+  flex-shrink: 0;
+  overflow: hidden;
+
+  border: 0;
+  outline: none;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.sidebar-brand-logo {
+  width: 195px !important;
+  height: 58px !important;
+
+  display: block;
+
+  object-fit: contain;
+  object-position: left center;
+
+  max-width: 195px;
+  max-height: 58px;
+}
+
+
+/* =========================================================
+   MAIN MENU
+========================================================= */
+
+.sidebar-menu {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+
+  flex-shrink: 0;
+}
+
+.sidebar-menu-item {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 0 14px;
+
+  border: none;
+  border-radius: 7px;
+
+  background: transparent;
+
+  color: #d9e2ec;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sidebar-menu-item svg {
+  flex-shrink: 0;
+}
+
+.sidebar-menu-item:hover {
+  background: rgba(13, 111, 220, 0.18);
+  color: #ffffff;
+}
+
+.sidebar-menu-item.active {
+  background: linear-gradient(
+    90deg,
+    #0867d9,
+    #0878ee
+  );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 5px 15px rgba(0, 100, 220, 0.25);
+}
+
+.sidebar-menu-item.active:hover {
+  background: linear-gradient(
+    90deg,
+    #0867d9,
+    #0878ee
+  );
+}
+
+
+/* =========================================================
+   ALERT BADGE
+========================================================= */
+
+.sidebar-badge {
+  width: 30px;
+  height: 30px;
+
+  margin-left: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #ef3f35;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   SETTINGS CHEVRON
+========================================================= */
+
+.sidebar-expand-icon {
+  margin-left: auto;
+
+  width: 22px;
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 5px;
+
+  color: currentColor;
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   SETTINGS SUBMENU
+========================================================= */
+
+.sidebar-submenu {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  margin: -1px 0 5px;
+
+  padding: 4px 0 5px 30px;
+
+  box-sizing: border-box;
+}
+
+.sidebar-submenu-item {
+  width: 100%;
+  min-height: 34px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 9px;
+
+  border: none;
+  border-radius: 5px;
+
+  background: transparent;
+
+  color: #b9c8d6;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    padding-left 0.2s ease;
+}
+
+.sidebar-submenu-item svg {
+  flex-shrink: 0;
+  color: #b7c7d6;
+}
+
+.sidebar-submenu-item:hover {
+  background: rgba(13, 111, 220, 0.14);
+  color: #ffffff;
+  padding-left: 11px;
+}
+
+.sidebar-submenu-item:hover svg {
+  color: #ffffff;
+}
+
+.sidebar-submenu-item.active {
+  background: rgba(5, 112, 224, 0.95);
+  color: #ffffff;
+
+  box-shadow:
+    0 4px 12px rgba(0, 90, 190, 0.18);
+}
+
+.sidebar-submenu-item.active svg {
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   CURRENT LOCATION
+========================================================= */
+
+.sidebar-location {
+  margin-top: auto;
+
+  padding: 16px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+
+  background: rgba(8, 30, 51, 0.72);
+
+  flex-shrink: 0;
+}
+
+.sidebar-location h4 {
+  margin: 0 0 13px;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar-location p {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin: 7px 0;
+
+  color: #d1dbe5;
+
+  font-size: 12px;
+}
+
+.sidebar-location .coordinates {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #b7c4d2;
+
+  font-size: 11px;
+}
+
+.sidebar-location button {
+  width: 100%;
+  height: 36px;
+
+  margin-top: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+
+  background: rgba(0, 0, 0, 0.15);
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 12px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.sidebar-location button:hover {
+  background: #086edc;
+  border-color: #086edc;
+}
+
+
+/* =========================================================
+   SYSTEM STATUS
+========================================================= */
+
+.sidebar-status {
+  margin-top: 14px;
+
+  padding: 15px 16px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+
+  background: rgba(8, 30, 51, 0.72);
+
+  flex-shrink: 0;
+}
+
+.sidebar-status h4 {
+  margin: 0 0 12px;
+
+  color: #ffffff;
+
+  font-size: 13px;
+}
+
+.sidebar-status p {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin: 0;
+
+  color: #d4dee8;
+
+  font-size: 11px;
+}
+
+.sidebar-status-updated {
+  display: block;
+
+  margin-top: 9px;
+
+  color: #7f94a9;
+
+  font-size: 9px;
+}
+
+.sidebar-status-time {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #d0dbe6;
+
+  font-size: 9px;
+}
+
+.sidebar-live-status {
+  margin-top: 8px !important;
+
+  color: #cdd9e4 !important;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #38c96b;
+
+  box-shadow:
+    0 0 7px rgba(56, 201, 107, 0.5);
+}
+
+
+/* =========================================================
+   HELP
+========================================================= */
+
+.sidebar-help {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  margin-top: 14px;
+  padding: 12px;
+
+  color: #2385f5;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  background: rgba(8, 30, 51, 0.55);
+
+  flex-shrink: 0;
+}
+
+.sidebar-help div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.sidebar-help strong {
+  color: #ffffff;
+
+  font-size: 12px;
+}
+
+.sidebar-help small {
+  color: #aebdca;
+
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .sidebar {
+    width: 220px !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
+  }
+
+  .sidebar-brand-logo {
+    width: 175px !important;
+    max-width: 175px;
+  }
+
+  .sidebar-menu-item {
+    font-size: 13px;
+  }
+
+  .sidebar-submenu {
+    padding-left: 27px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+  .sidebar {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+
+    padding: 20px 10px;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .sidebar-brand-logo {
+    width: 48px !important;
+    height: 48px !important;
+    max-width: 48px;
+    max-height: 48px;
+  }
+
+  .sidebar-menu-item {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .sidebar-menu-item > span:not(.sidebar-badge):not(.sidebar-expand-icon) {
+    display: none;
+  }
+
+  .sidebar-expand-icon {
+    display: none;
+  }
+
+  .sidebar-submenu {
+    display: none;
+  }
+
+  .sidebar-location,
+  .sidebar-status,
+  .sidebar-help {
+    display: none;
+  }
+
+  .sidebar-badge {
+    position: absolute;
+
+    right: 3px;
+    top: 0;
+
+    width: 18px;
+    height: 18px;
+
+    font-size: 8px;
+  }
+}
+
+
+/* =========================================================
+   FINAL WIDTH SAFETY FIX
+========================================================= */
+
+@media (min-width: 901px) {
+  .sidebar {
+    width: 248px !important;
+    min-width: 248px !important;
+    max-width: 248px !important;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .sidebar {
+    width: 220px !important;
+    min-width: 220px !important;
+    max-width: 220px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .sidebar {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+  }
+}

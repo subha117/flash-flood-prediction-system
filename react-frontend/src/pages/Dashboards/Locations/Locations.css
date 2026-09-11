@@ -1,0 +1,1477 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+
+  width: 100%;
+  min-height: 100%;
+
+  font-family: "Inter", Arial, sans-serif;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.locations-page {
+  width: 100%;
+  min-height: 100vh;
+
+  margin: 0;
+  padding-left: 248px;
+
+  background: #f5f7fa;
+
+  color: #10233f;
+
+  overflow-x: hidden;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.locations-main {
+  width: 100%;
+  min-height: 100vh;
+
+  margin: 0;
+  padding: 0;
+
+  background: #f5f7fa;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.locations-header {
+  width: 100%;
+  height: 88px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 28px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #dce4ec;
+}
+
+.locations-header-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.locations-header-title h1 {
+  margin: 0;
+
+  font-size: 25px;
+  line-height: 1.15;
+
+  font-weight: 800;
+
+  color: #10233f;
+}
+
+.locations-header-title p {
+  margin: 5px 0 0;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  color: #60748d;
+}
+
+.locations-header-right {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+}
+
+
+/* =========================================================
+   HEADER SEARCH
+========================================================= */
+
+.locations-header-search {
+  width: 260px;
+  height: 39px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 13px;
+
+  border: 1px solid #d6e0ea;
+  border-radius: 9px;
+
+  background: #ffffff;
+}
+
+.locations-header-search input {
+  flex: 1;
+
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  font-size: 11px;
+
+  color: #172b46;
+}
+
+.locations-header-search input::placeholder {
+  color: #7b8da2;
+}
+
+.locations-header-search svg {
+  flex-shrink: 0;
+
+  color: #263c58;
+}
+
+
+/* =========================================================
+   NOTIFICATION
+========================================================= */
+
+.locations-notification {
+  position: relative;
+
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #dce5ef;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #162b46;
+
+  cursor: pointer;
+}
+
+.locations-notification span {
+  position: absolute;
+
+  top: -4px;
+  right: -2px;
+
+  width: 20px;
+  height: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #e53935;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+.locations-profile {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  cursor: pointer;
+}
+
+.locations-avatar {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #e8f0fa;
+
+  color: #24415f;
+}
+
+.locations-profile-info {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 92px;
+}
+
+.locations-profile-info strong {
+  font-size: 12px;
+
+  font-weight: 700;
+
+  color: #14263f;
+}
+
+.locations-profile-info span {
+  margin-top: 2px;
+
+  font-size: 10px;
+
+  color: #647890;
+}
+
+.locations-profile > svg {
+  color: #182d48;
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.locations-content {
+  width: 100%;
+
+  padding: 20px 28px 30px;
+}
+
+
+/* =========================================================
+   STAT GRID
+========================================================= */
+
+.location-stat-grid {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 14px;
+
+  margin-bottom: 14px;
+}
+
+.location-stat-card {
+  min-height: 94px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 14px 16px;
+
+  background: #ffffff;
+
+  border: 1px solid #dbe4ed;
+
+  border-radius: 9px;
+
+  box-shadow:
+    0 2px 8px rgba(15, 35, 63, 0.035);
+}
+
+.stat-icon {
+  width: 51px;
+  height: 51px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+}
+
+.stat-icon.blue {
+  background: #eaf3ff;
+  color: #1768d8;
+}
+
+.stat-icon.green {
+  background: #e8f8ed;
+  color: #22a653;
+}
+
+.stat-icon.orange {
+  background: #fff3df;
+  color: #f59b16;
+}
+
+.stat-icon.purple {
+  background: #f4eaff;
+  color: #8b38d7;
+}
+
+.stat-content {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-content span {
+  font-size: 10px;
+
+  font-weight: 600;
+
+  color: #243952;
+}
+
+.stat-content strong {
+  margin-top: 2px;
+
+  font-size: 23px;
+  line-height: 1.15;
+
+  font-weight: 800;
+
+  color: #10233f;
+}
+
+.stat-content small {
+  margin-top: 3px;
+
+  font-size: 9px;
+
+  color: #718399;
+}
+
+
+/* =========================================================
+   WORKSPACE
+========================================================= */
+
+.locations-workspace {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(290px, 0.92fr);
+
+  gap: 14px;
+
+  margin-bottom: 14px;
+}
+
+
+/* =========================================================
+   MAP CARD
+========================================================= */
+
+.locations-map-card {
+  min-width: 0;
+
+  background: #ffffff;
+
+  border: 1px solid #dbe4ed;
+
+  border-radius: 9px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 2px 8px rgba(15, 35, 63, 0.035);
+}
+
+.locations-card-header {
+  height: 43px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 14px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #e2e8ef;
+}
+
+.locations-card-header h2 {
+  margin: 0;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  color: #172b46;
+}
+
+
+/* =========================================================
+   MAP
+========================================================= */
+
+.locations-map {
+  position: relative;
+
+  width: 100%;
+  height: 345px;
+
+  overflow: hidden;
+}
+
+.locations-leaflet-map {
+  width: 100%;
+  height: 100%;
+}
+
+.locations-leaflet-map .leaflet-control-zoom {
+  margin-left: 12px;
+  margin-top: 10px;
+
+  border: none;
+}
+
+.locations-leaflet-map .leaflet-control-zoom a {
+  width: 31px;
+  height: 31px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+
+  border: 1px solid #d7e0e9;
+
+  color: #152a44;
+
+  font-size: 19px;
+}
+
+.locations-leaflet-map .leaflet-control-zoom a:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.locations-leaflet-map .leaflet-control-zoom a:last-child {
+  border-top: none;
+
+  border-radius: 0 0 6px 6px;
+}
+
+.locations-leaflet-map .leaflet-control-attribution {
+  font-size: 7px;
+}
+
+
+/* =========================================================
+   CUSTOM MARKER
+========================================================= */
+
+.location-marker-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.location-marker {
+  width: 30px;
+  height: 30px;
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50% 50% 50% 0;
+
+  background: var(--marker-color);
+
+  border: 3px solid #ffffff;
+
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.22);
+
+  transform: rotate(-45deg);
+}
+
+.location-marker-inner {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  transform: rotate(45deg);
+}
+
+
+/* =========================================================
+   EXTRA MAP CONTROLS
+========================================================= */
+
+.leaflet-extra-controls {
+  position: absolute;
+
+  left: 12px;
+  top: 82px;
+
+  z-index: 500;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.leaflet-extra-controls button {
+  width: 31px;
+  height: 31px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #d7e0e9;
+  border-radius: 6px;
+
+  background: #ffffff;
+
+  color: #253c58;
+
+  box-shadow:
+    0 1px 5px rgba(0, 0, 0, 0.12);
+
+  cursor: pointer;
+}
+
+.leaflet-extra-controls button:hover {
+  background: #f5f9fd;
+
+  color: #1768d8;
+}
+
+
+/* =========================================================
+   MAP LEGEND
+========================================================= */
+
+.location-map-legend {
+  position: absolute;
+
+  right: 12px;
+  top: 12px;
+
+  z-index: 500;
+
+  min-width: 92px;
+
+  padding: 9px 10px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  border: 1px solid #dce5ee;
+
+  border-radius: 7px;
+
+  box-shadow:
+    0 3px 12px rgba(15, 35, 63, 0.1);
+}
+
+.location-map-legend div {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin-bottom: 7px;
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  color: #243953;
+}
+
+.location-map-legend div:last-child {
+  margin-bottom: 0;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+
+  display: block;
+
+  border-radius: 50%;
+}
+
+.legend-dot.low {
+  background: #16a34a;
+}
+
+.legend-dot.moderate {
+  background: #f59e0b;
+}
+
+.legend-dot.high {
+  background: #f97316;
+}
+
+.legend-dot.critical {
+  background: #dc2626;
+}
+
+
+/* =========================================================
+   POPUP
+========================================================= */
+
+.map-popup {
+  min-width: 145px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  font-family: "Inter", Arial, sans-serif;
+
+  color: #172b46;
+}
+
+.map-popup strong {
+  font-size: 13px;
+}
+
+.map-popup span,
+.map-popup div {
+  font-size: 10px;
+}
+
+.map-popup b {
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   FILTER CARD
+========================================================= */
+
+.location-filter-card {
+  position: relative;
+
+  min-width: 0;
+
+  padding: 14px;
+
+  background: #ffffff;
+
+  border: 1px solid #dbe4ed;
+
+  border-radius: 9px;
+
+  box-shadow:
+    0 2px 8px rgba(15, 35, 63, 0.035);
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 15px;
+}
+
+.filter-header h2 {
+  margin: 0;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  color: #172b46;
+}
+
+.filter-header button {
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #1768d8;
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   FILTER FIELD
+========================================================= */
+
+.filter-field {
+  margin-bottom: 13px;
+}
+
+.filter-field label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  color: #52677f;
+}
+
+.filter-field select {
+  width: 100%;
+  height: 38px;
+
+  padding: 0 11px;
+
+  border: 1px solid #d7e1eb;
+  border-radius: 6px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #304660;
+
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.filter-field select:focus {
+  border-color: #5b9bea;
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.state-search-field {
+  position: relative;
+}
+
+.filter-search {
+  width: 100%;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 10px;
+
+  border: 1px solid #d7e1eb;
+  border-radius: 6px;
+
+  background: #ffffff;
+}
+
+.filter-search:focus-within {
+  border-color: #5b9bea;
+}
+
+.filter-search input {
+  flex: 1;
+
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  font-size: 10px;
+
+  color: #243953;
+}
+
+.filter-search input::placeholder {
+  color: #8291a3;
+}
+
+.filter-search svg {
+  flex-shrink: 0;
+
+  color: #667b93;
+}
+
+
+/* =========================================================
+   STATE SUGGESTIONS
+========================================================= */
+
+.state-suggestions {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+
+  top: calc(100% - 2px);
+
+  z-index: 1000;
+
+  padding: 5px;
+
+  background: #ffffff;
+
+  border: 1px solid #d7e1eb;
+  border-radius: 7px;
+
+  box-shadow:
+    0 8px 22px rgba(15, 35, 63, 0.12);
+
+  max-height: 190px;
+
+  overflow-y: auto;
+}
+
+.state-suggestion-item {
+  width: 100%;
+
+  min-height: 34px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 0 9px;
+
+  border: none;
+  border-radius: 5px;
+
+  background: transparent;
+
+  color: #304660;
+
+  text-align: left;
+
+  font-size: 10px;
+
+  font-weight: 500;
+
+  cursor: pointer;
+}
+
+.state-suggestion-item svg {
+  flex-shrink: 0;
+
+  color: #1768d8;
+}
+
+.state-suggestion-item:hover {
+  background: #eef5ff;
+
+  color: #1768d8;
+}
+
+.state-suggestions::-webkit-scrollbar {
+  width: 5px;
+}
+
+.state-suggestions::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+
+  border-radius: 10px;
+}
+
+
+/* =========================================================
+   APPLY FILTER
+========================================================= */
+
+.apply-filter-button {
+  width: 100%;
+  height: 38px;
+
+  margin-top: 2px;
+
+  border: none;
+  border-radius: 6px;
+
+  background: #1768d8;
+
+  color: #ffffff;
+
+  font-size: 10px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.apply-filter-button:hover {
+  background: #125bc0;
+}
+
+.apply-filter-button:active {
+  transform: scale(0.99);
+}
+
+
+/* =========================================================
+   TABLE CARD
+========================================================= */
+
+.locations-table-card {
+  width: 100%;
+
+  background: #ffffff;
+
+  border: 1px solid #dbe4ed;
+
+  border-radius: 9px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 2px 8px rgba(15, 35, 63, 0.035);
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.locations-table-header {
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 14px;
+
+  border-bottom: 1px solid #e1e7ee;
+}
+
+.locations-table-header h2 {
+  margin: 0;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  color: #172b46;
+}
+
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.locations-table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+.locations-table {
+  width: 100%;
+
+  min-width: 1000px;
+
+  border-collapse: collapse;
+}
+
+.locations-table thead {
+  background: #f8fafc;
+}
+
+.locations-table th {
+  height: 37px;
+
+  padding: 0 10px;
+
+  border-bottom: 1px solid #e1e7ee;
+
+  text-align: left;
+
+  white-space: nowrap;
+
+  font-size: 8px;
+
+  font-weight: 700;
+
+  color: #31455e;
+}
+
+.locations-table td {
+  height: 43px;
+
+  padding: 0 10px;
+
+  border-bottom: 1px solid #edf1f5;
+
+  white-space: nowrap;
+
+  font-size: 8px;
+
+  color: #3f536b;
+}
+
+.locations-table tbody tr:hover {
+  background: #fafcff;
+}
+
+.locations-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* =========================================================
+   LOCATION CELL
+========================================================= */
+
+.table-location {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.table-location strong {
+  font-size: 9px;
+
+  font-weight: 600;
+
+  color: #1b304b;
+}
+
+.table-location-dot {
+  width: 20px;
+  height: 20px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+}
+
+.coordinates-cell {
+  font-size: 8px !important;
+}
+
+
+/* =========================================================
+   RISK BADGES
+========================================================= */
+
+.table-risk {
+  min-width: 50px;
+  height: 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 7px;
+
+  border-radius: 5px;
+
+  font-size: 8px;
+
+  font-weight: 700;
+}
+
+.table-risk.low {
+  background: #e5f5e9;
+  color: #25944a;
+}
+
+.table-risk.moderate {
+  background: #fff5d8;
+  color: #e59b0a;
+}
+
+.table-risk.high {
+  background: #fff0d9;
+  color: #e87500;
+}
+
+.table-risk.critical {
+  background: #ffe3e3;
+  color: #d82d2d;
+}
+
+
+/* =========================================================
+   PROBABILITY
+========================================================= */
+
+.table-probability {
+  font-size: 9px;
+
+  font-weight: 700;
+}
+
+.table-probability.low {
+  color: #25944a;
+}
+
+.table-probability.moderate {
+  color: #e58d08;
+}
+
+.table-probability.high {
+  color: #e44a32;
+}
+
+.table-probability.critical {
+  color: #d62828;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.table-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+}
+
+.table-actions button {
+  width: 28px;
+  height: 27px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #e0e7ee;
+  border-radius: 5px;
+
+  background: #ffffff;
+
+  color: #52667d;
+
+  cursor: pointer;
+}
+
+.table-actions button:hover {
+  background: #f4f8fc;
+
+  color: #1768d8;
+
+  border-color: #bcd1e8;
+}
+
+
+/* =========================================================
+   EMPTY TABLE
+========================================================= */
+
+.no-location-row {
+  height: 100px !important;
+
+  text-align: center !important;
+
+  color: #7a8ba0 !important;
+}
+
+.no-location-row svg {
+  vertical-align: middle;
+
+  margin-right: 6px;
+}
+
+
+/* =========================================================
+   TABLE FOOTER
+========================================================= */
+
+.locations-table-footer {
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 14px;
+
+  border-top: 1px solid #e1e7ee;
+
+  background: #ffffff;
+}
+
+.locations-table-footer > span {
+  font-size: 9px;
+
+  color: #73859a;
+}
+
+.locations-table-footer > span strong {
+  color: #344a63;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.pagination {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+}
+
+.pagination button {
+  width: 29px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #e0e7ee;
+  border-radius: 5px;
+
+  background: #ffffff;
+
+  color: #40556e;
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #f3f7fc;
+}
+
+.pagination button.active {
+  background: #1768d8;
+
+  border-color: #1768d8;
+
+  color: #ffffff;
+}
+
+.pagination button:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+}
+
+.pagination-dots {
+  padding: 0 2px;
+
+  font-size: 10px;
+
+  color: #7b8da1;
+}
+
+
+/* =========================================================
+   ROWS PER PAGE
+========================================================= */
+
+.rows-per-page {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  font-size: 9px;
+
+  color: #72849a;
+}
+
+.rows-per-page select {
+  width: 48px;
+  height: 27px;
+
+  border: 1px solid #dce4ec;
+  border-radius: 5px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #334963;
+
+  font-size: 9px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (min-width: 901px) {
+
+  .locations-page {
+    padding-left: 248px;
+  }
+
+}
+
+
+@media (min-width: 701px) and (max-width: 900px) {
+
+  .locations-page {
+    padding-left: 220px;
+  }
+
+  .locations-content {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .location-stat-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .locations-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .locations-header-search {
+    width: 210px;
+  }
+
+}
+
+
+@media (max-width: 700px) {
+
+  .locations-page {
+    padding-left: 70px;
+  }
+
+  .locations-header {
+    height: auto;
+
+    min-height: 80px;
+
+    padding: 14px 16px;
+
+    gap: 15px;
+  }
+
+  .locations-header-right {
+    gap: 8px;
+  }
+
+  .locations-header-search {
+    width: 170px;
+  }
+
+  .locations-profile-info {
+    display: none;
+  }
+
+  .locations-content {
+    padding: 14px;
+  }
+
+  .location-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .locations-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .locations-map {
+    height: 320px;
+  }
+
+  .locations-table-footer {
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    padding: 12px 14px;
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  .locations-header-title h1 {
+    font-size: 20px;
+  }
+
+  .locations-header-title p {
+    display: none;
+  }
+
+  .locations-header-search {
+    width: 145px;
+  }
+
+  .locations-notification {
+    width: 37px;
+    height: 37px;
+  }
+
+  .locations-avatar {
+    width: 37px;
+    height: 37px;
+  }
+
+}

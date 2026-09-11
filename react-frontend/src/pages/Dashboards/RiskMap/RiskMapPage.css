@@ -1,0 +1,857 @@
+/* =========================================================
+   RISK MAP PAGE
+========================================================= */
+
+.risk-map-page {
+  width: 100%;
+  min-height: 100vh;
+  padding-left: 248px;
+  box-sizing: border-box;
+  background: #f4f7fa;
+  color: #172033;
+}
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.risk-map-main {
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.risk-header {
+  height: 94px;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e7ed;
+  box-sizing: border-box;
+}
+
+.risk-header-left {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.risk-menu-button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  color: #172033;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.risk-header-left h1 {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.risk-header-left p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #657287;
+}
+
+.risk-header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.risk-search {
+  width: 240px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  border: 1px solid #dbe2ea;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #1c2d44;
+}
+
+.risk-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  color: #172033;
+}
+
+.risk-search input::placeholder {
+  color: #657287;
+}
+
+/* =========================================================
+   NOTIFICATION
+========================================================= */
+
+.risk-notification {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #dce3eb;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #172033;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.risk-notification span {
+  position: absolute;
+  right: -2px;
+  top: -4px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: #e53935;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+.risk-profile {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.risk-profile-avatar {
+  width: 43px;
+  height: 43px;
+  border-radius: 50%;
+  background: #dce7f2;
+  color: #263b55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.risk-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.risk-profile-info strong {
+  font-size: 12px;
+  color: #111827;
+}
+
+.risk-profile-info small {
+  font-size: 10px;
+  color: #69758a;
+}
+
+/* =========================================================
+   FILTER BAR
+========================================================= */
+
+.risk-filter-bar {
+  min-height: 74px;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  background: #f4f7fa;
+}
+
+.risk-filter-bar select {
+  width: 160px;
+  height: 39px;
+  padding: 0 12px;
+  border: 1px solid #d4dce5;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #253248;
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+.risk-filter-spacer {
+  flex: 1;
+}
+
+.risk-refresh-button {
+  height: 39px;
+  padding: 0 17px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 7px;
+  background: #1768d8;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.risk-refresh-button:hover {
+  background: #0f5fc9;
+}
+
+.refresh-spin {
+  animation: riskRefreshSpin 0.7s linear infinite;
+}
+
+@keyframes riskRefreshSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   WORKSPACE
+========================================================= */
+
+.risk-workspace {
+  width: 100%;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   MAP
+========================================================= */
+
+.interactive-map-card {
+  position: relative;
+  height: 800px;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #d8e0e8;
+  border-radius: 10px;
+  background: #dce7d4;
+}
+
+.interactive-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* =========================================================
+   MAP MARKER
+========================================================= */
+
+.risk-marker-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.risk-marker {
+  width: 34px;
+  height: 42px;
+  position: relative;
+}
+
+.risk-marker-pin {
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50% 50% 50% 0;
+  background: var(--marker-color);
+  transform: rotate(-45deg);
+  border: 3px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.28);
+}
+
+.risk-marker-pin span {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  left: 6px;
+  top: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+/* =========================================================
+   MAP CONTROLS
+========================================================= */
+
+.custom-map-controls {
+  position: absolute;
+  left: 14px;
+  top: 18px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.custom-map-controls button {
+  width: 37px;
+  height: 37px;
+  border: none;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172033;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.18);
+}
+
+.custom-map-controls button:hover,
+.custom-map-controls .active-control {
+  color: #1768d8;
+}
+
+/* =========================================================
+   LEGEND
+========================================================= */
+
+.map-risk-legend {
+  position: absolute;
+  right: 16px;
+  top: 15px;
+  z-index: 1000;
+  width: 190px;
+  padding: 15px 16px;
+  border-radius: 8px;
+  background: rgba(6, 26, 43, 0.91);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.map-risk-legend h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.map-risk-legend div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 9px;
+}
+
+.map-risk-legend div:last-child {
+  margin-bottom: 0;
+}
+
+.map-risk-legend span {
+  font-size: 11px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.legend-dot.low {
+  background: #22c55e;
+}
+
+.legend-dot.moderate {
+  background: #facc15;
+}
+
+.legend-dot.high {
+  background: #f97316;
+}
+
+.legend-dot.critical {
+  background: #dc2626;
+}
+
+.legend-dot.extreme {
+  background: #a855f7;
+}
+
+/* =========================================================
+   SCALE
+========================================================= */
+
+.map-scale {
+  position: absolute;
+  left: 17px;
+  bottom: 20px;
+  z-index: 1000;
+  width: 205px;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 3px solid #ffffff;
+  color: #ffffff;
+  font-size: 10px;
+  text-shadow: 0 1px 3px #000000;
+}
+
+/* =========================================================
+   RIGHT DETAILS
+========================================================= */
+
+.risk-details-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.details-card {
+  padding: 17px;
+  border: 1px solid #d8e0e8;
+  border-radius: 9px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.details-card h2 {
+  margin: 0;
+  font-size: 15px;
+  color: #172033;
+}
+
+/* =========================================================
+   SELECTED LOCATION
+========================================================= */
+
+.details-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.details-card-header button {
+  border: none;
+  background: transparent;
+  color: #596579;
+  cursor: pointer;
+}
+
+.selected-location-content {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.selected-pin {
+  flex-shrink: 0;
+  color: #e43732;
+}
+
+.selected-location-content h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #172033;
+}
+
+.selected-location-content p {
+  margin: 0 0 7px;
+  font-size: 11px;
+  color: #657287;
+}
+
+.selected-location-content span {
+  font-size: 11px;
+  color: #46536a;
+}
+
+/* =========================================================
+   FLOOD RISK
+========================================================= */
+
+.flood-risk-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.risk-level-badge {
+  padding: 6px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.risk-level-badge.critical {
+  color: #e23732;
+  background: #fde8e7;
+}
+
+.risk-level-badge.high {
+  color: #ea6417;
+  background: #fff0e2;
+}
+
+.risk-level-badge.moderate {
+  color: #c98a05;
+  background: #fff6d8;
+}
+
+.risk-level-badge.low {
+  color: #218c4a;
+  background: #e7f6eb;
+}
+
+.flood-score {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.flood-score strong {
+  font-size: 40px;
+  line-height: 1;
+  color: #111827;
+}
+
+.flood-score span {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #69758a;
+}
+
+.risk-gauge {
+  height: 10px;
+  margin-top: 17px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #e8edf2;
+}
+
+.risk-gauge-fill {
+  width: var(--risk-score);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    #facc15,
+    #f97316,
+    #dc2626
+  );
+}
+
+.risk-card-footer {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid #e8edf2;
+  color: #657287;
+  font-size: 10px;
+}
+
+/* =========================================================
+   ENVIRONMENT
+========================================================= */
+
+.environment-details-card {
+  flex: 1;
+}
+
+.environment-details-card h2 {
+  margin-bottom: 13px;
+}
+
+.environment-detail-row {
+  min-height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #edf0f3;
+}
+
+.environment-detail-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #46536a;
+}
+
+.environment-detail-name svg {
+  color: #1768d8;
+}
+
+.environment-detail-name span {
+  font-size: 10px;
+}
+
+.environment-detail-row strong {
+  font-size: 11px;
+  color: #172033;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.view-prediction-button,
+.historical-button {
+  width: 100%;
+  height: 43px;
+  margin-top: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-prediction-button {
+  border: none;
+  background: #1768d8;
+  color: #ffffff;
+}
+
+.view-prediction-button svg:last-child {
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.historical-button {
+  border: 1px solid #d0d9e3;
+  background: #ffffff;
+  color: #26364d;
+}
+
+/* =========================================================
+   SUMMARY
+========================================================= */
+
+.risk-summary-grid {
+  padding: 12px 24px 24px;
+  display: grid;
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.risk-summary-card {
+  min-height: 110px;
+  padding: 17px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid #dce3ea;
+  border-radius: 9px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.risk-summary-card > svg {
+  flex-shrink: 0;
+  color: #1768d8;
+}
+
+.risk-summary-card div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.risk-summary-card span {
+  color: #68758a;
+  font-size: 9px;
+}
+
+.risk-summary-card strong {
+  margin-top: 5px;
+  color: #111827;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.risk-summary-card small {
+  margin-top: 4px;
+  color: #657287;
+  font-size: 9px;
+}
+
+.risk-summary-card .danger-text {
+  color: #dc3732;
+  font-size: 15px;
+}
+
+/* =========================================================
+   POPUP
+========================================================= */
+
+.map-popup h3 {
+  margin: 0 0 7px;
+  font-size: 15px;
+}
+
+.popup-risk {
+  margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.map-popup p {
+  margin: 5px 0;
+  font-size: 11px;
+}
+
+.map-popup button {
+  margin-top: 8px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 5px;
+  background: #1768d8;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1250px) {
+  .risk-workspace {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+
+  .risk-summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .risk-search {
+    width: 200px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .risk-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .risk-details-panel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .interactive-map-card {
+    height: 600px;
+  }
+}
+
+@media (max-width: 900px) {
+  .risk-map-page {
+    padding-left: 220px;
+  }
+
+  .risk-header {
+    padding: 0 20px;
+  }
+
+  .risk-header-left h1 {
+    font-size: 23px;
+  }
+
+  .risk-profile-info {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .risk-map-page {
+    padding-left: 70px;
+  }
+
+  .risk-header {
+    height: auto;
+    min-height: 75px;
+    padding: 12px;
+  }
+
+  .risk-header-right {
+    gap: 8px;
+  }
+
+  .risk-search {
+    display: none;
+  }
+
+  .risk-filter-bar {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .risk-filter-bar select {
+    width: calc(50% - 7px);
+  }
+
+  .risk-filter-spacer {
+    display: none;
+  }
+
+  .risk-workspace {
+    padding: 0 12px;
+  }
+
+  .risk-details-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .risk-summary-grid {
+    padding: 12px;
+    grid-template-columns: 1fr;
+  }
+
+  .interactive-map-card {
+    height: 500px;
+  }
+
+  .map-risk-legend {
+    width: 155px;
+  }
+}
+
+
