@@ -166,14 +166,11 @@ function Sidebar({
   const handleMenuClick = (item) => {
     if (item.id === "settings") {
       setSettingsOpen((value) => !value);
-
       if (onNavigate) {
-        onNavigate("settings");
+        onNavigate("settings-profile");   // open settings at Profile tab
       }
-
       return;
     }
-
     if (onNavigate) {
       onNavigate(item.id);
     }

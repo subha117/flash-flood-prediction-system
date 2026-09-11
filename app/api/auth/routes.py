@@ -13,6 +13,7 @@ from app.core.security import (
 from app.database.dependencies import get_db
 from app.models.user import User
 from app.models.token_blacklist import TokenBlacklist
+from app.models.activity_log import ActivityLog
 from app.schemas.auth import (
     TokenResponse,
     UserRegister,
@@ -51,6 +52,15 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
     access_token = create_access_token({"sub": str(user.id)})
+    
+    # Log login activity
+    try:
+        log = ActivityLog(user_id=user.id, action="LOGIN", details=f"Logged in from {form_data.username}")
+        db.add(log)
+        db.commit()
+    except Exception:
+        pass
+        
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -110,6 +120,13 @@ def change_password(
         raise HTTPException(status_code=400, detail="New password must be at least 8 characters")
     user.password_hash = hash_password(data.new_password)
     db.commit()
+    # Log activity
+    try:
+        log = ActivityLog(user_id=current_user_id, action="PASSWORD_CHANGED", details="Password changed via Settings")
+        db.add(log)
+        db.commit()
+    except Exception:
+        pass
     return {"message": "Password changed successfully"}
 
 

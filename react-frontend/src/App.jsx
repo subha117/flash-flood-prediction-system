@@ -53,6 +53,14 @@ function AppRoutes() {
 
   const handleNavigate = (pageName) => {
     const page = String(pageName).toLowerCase();
+
+    // Handle settings sub-navigation (e.g. "settings-profile", "settings-security")
+    if (page.startsWith("settings-")) {
+      const tab = page.replace("settings-", "");
+      navigate(`/settings?tab=${tab}`);
+      return;
+    }
+
     const routes = {
       dashboard: "/dashboard",
       admin: "/admin",

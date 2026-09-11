@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar/Sidebar';
 import Navbar from '../../../components/Navbar/Navbar';
 import { AuthContext } from '../../../context/AuthContext';
@@ -6,11 +7,21 @@ import './Settings.css';
 
 const API = 'http://127.0.0.1:8000/api';
 
-const tabs = [
-  'Profile', 'Preferences', 'Notifications', 'Data & Units',
-  'Security', 'Access & Roles', 'API & Integrations',
-  'Activity Log', 'Backup & Restore', 'About'
-];
+// Map sidebar URL ids → display tab names
+const TAB_MAP = {
+  'profile': 'Profile',
+  'preferences': 'Preferences',
+  'notifications': 'Notifications',
+  'data-units': 'Data & Units',
+  'security': 'Security',
+  'access-roles': 'Access & Roles',
+  'api-integrations': 'API & Integrations',
+  'activity-log': 'Activity Log',
+  'backup-restore': 'Backup & Restore',
+  'about': 'About',
+};
+
+const tabs = Object.values(TAB_MAP);
 
 // ─── Profile ────────────────────────────────────────────────────────────────
 const ProfileTab = ({ user, token, onUserUpdate }) => {
@@ -282,24 +293,89 @@ const AccessRolesTab = ({ token, user }) => {
 };
 
 // ─── API & Integrations ──────────────────────────────────────────────────────
-const APIIntegrationsTab = () => (
-  <div className="tab-pane">
-    <h3>API & Integrations</h3>
-    <div className="info-box">
-      <h4>Active Providers</h4>
-      <table className="settings-table">
-        <thead><tr><th>Provider</th><th>Type</th><th>Status</th><th>Auth</th></tr></thead>
-        <tbody>
-          <tr><td>Open-Meteo</td><td>Weather + Elevation</td><td><span className="badge badge-admin">LIVE</span></td><td>No key required</td></tr>
-          <tr><td>Nominatim</td><td>Geocoding</td><td><span className="badge badge-admin">LIVE</span></td><td>No key required</td></tr>
-          <tr><td>Local DEM</td><td>Terrain (Uttarakhand)</td><td><span className="badge badge-gov">LOCAL</span></td><td>File-based</td></tr>
-          <tr><td>Random Forest</td><td>ML Prediction</td><td><span className="badge badge-admin">ACTIVE</span></td><td>Internal model</td></tr>
-        </tbody>
-      </table>
+const APIIntegrationsTab = () => {
+  const [health, setHealth] = useState({});
+  const [checking, setChecking] = useState(false);
+
+  const providers = [
+    { name: 'FastAPI Backend', url: `${API}/health`, label: 'System Health' },
+    { name: 'Open-Meteo Weather', url: 'https://api.open-meteo.com/v1/forecast?latitude=22.57&longitude=88.36&current=temperature_2m', label: 'Weather + Elevation' },
+    { name: 'Nominatim Geocoding', url: 'https://nominatim.openstreetmap.org/reverse?lat=22.57&lon=88.36&format=json', label: 'Geocoding' },
+  ];
+
+  const checkAll = async () => {
+    setChecking(true);
+    const results = {};
+    await Promise.all(providers.map(async (p) => {
+      try {
+        const start = Date.now();
+        const res = await fetch(p.url, { signal: AbortSignal.timeout(5000) });
+        results[p.name] = { ok: res.ok, ms: Date.now() - start };
+      } catch {
+        results[p.name] = { ok: false, ms: null };
+      }
+    }));
+    setHealth(results);
+    setChecking(false);
+  };
+
+  useEffect(() => { checkAll(); }, []);
+
+  return (
+    <div className="tab-pane">
+      <h3>API & Integrations</h3>
+      <div className="info-box">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h4 style={{ margin: 0 }}>Live Provider Status</h4>
+          <button className="btn-primary" onClick={checkAll} disabled={checking} style={{ padding: '6px 14px', fontSize: '0.8rem' }}>
+            {checking ? 'Checking…' : '↻ Refresh'}
+          </button>
+        </div>
+        <table className="settings-table">
+          <thead><tr><th>Provider</th><th>Purpose</th><th>Status</th><th>Latency</th><th>Auth</th></tr></thead>
+          <tbody>
+            {providers.map(p => {
+              const h = health[p.name];
+              return (
+                <tr key={p.name}>
+                  <td><strong>{p.name}</strong></td>
+                  <td>{p.label}</td>
+                  <td>
+                    {!h ? <span style={{ color: '#94a3b8' }}>—</span>
+                      : h.ok
+                        ? <span style={{ color: '#16a34a', fontWeight: 600 }}>● ONLINE</span>
+                        : <span style={{ color: '#dc2626', fontWeight: 600 }}>● OFFLINE</span>}
+                  </td>
+                  <td style={{ fontSize: '0.8rem', color: '#64748b' }}>{h?.ms != null ? `${h.ms}ms` : '—'}</td>
+                  <td style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                    {p.name === 'FastAPI Backend' ? 'JWT Bearer' : 'No key required'}
+                  </td>
+                </tr>
+              );
+            })}
+            <tr>
+              <td><strong>Local DEM</strong></td>
+              <td>Terrain — Uttarakhand</td>
+              <td><span style={{ color: '#2563eb', fontWeight: 600 }}>● LOCAL FILE</span></td>
+              <td style={{ fontSize: '0.8rem', color: '#64748b' }}>~0ms</td>
+              <td style={{ fontSize: '0.8rem', color: '#64748b' }}>File-based</td>
+            </tr>
+            <tr>
+              <td><strong>Random Forest ML</strong></td>
+              <td>Flood Prediction (9 features)</td>
+              <td><span style={{ color: '#16a34a', fontWeight: 600 }}>● LOADED</span></td>
+              <td style={{ fontSize: '0.8rem', color: '#64748b' }}>~1ms</td>
+              <td style={{ fontSize: '0.8rem', color: '#64748b' }}>Internal model</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="hint">No API secrets are exposed in this panel. All credentials are stored server-side in <code>.env</code>.</p>
     </div>
-    <p className="hint">No API secrets are exposed in this panel. All keys are stored server-side in environment variables.</p>
-  </div>
-);
+  );
+};
+
+
 
 // ─── Activity Log ────────────────────────────────────────────────────────────
 const ActivityLogTab = ({ token }) => {
@@ -393,7 +469,20 @@ const AboutTab = () => (
 // ─── Main Settings Page ──────────────────────────────────────────────────────
 export default function Settings({ onNavigate, onHome }) {
   const { user, token } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('Profile');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Derive active tab from URL ?tab= param, default to 'Profile'
+  const tabParam = searchParams.get('tab');
+  const activeTab = TAB_MAP[tabParam] || 'Profile';
+
+  const setActiveTab = (tabName) => {
+    // Find the URL key for this tab name
+    const urlKey = Object.keys(TAB_MAP).find(k => TAB_MAP[k] === tabName) || 'profile';
+    setSearchParams({ tab: urlKey });
+  };
+
+  // Derive sidebar activeSubPage from current tab
+  const activeSubPage = Object.keys(TAB_MAP).find(k => TAB_MAP[k] === activeTab) || 'profile';
 
   const renderTab = () => {
     switch (activeTab) {
@@ -413,12 +502,13 @@ export default function Settings({ onNavigate, onHome }) {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
-      <Sidebar activePage="settings" onNavigate={onNavigate} onHome={onHome} />
+      <Sidebar activePage="settings" activeSubPage={activeSubPage} onNavigate={onNavigate} onHome={onHome} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Navbar onNavigate={onNavigate} />
         <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           <h2 style={{ marginBottom: '24px', color: '#1e293b' }}>⚙️ Settings</h2>
           <div className="settings-layout">
+            {/* Secondary tab nav (visible on wider screens, mirrors sidebar) */}
             <nav className="settings-nav">
               {tabs.map(tab => (
                 <button
@@ -439,3 +529,4 @@ export default function Settings({ onNavigate, onHome }) {
     </div>
   );
 }
+

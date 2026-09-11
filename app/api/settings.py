@@ -6,6 +6,7 @@ from typing import Optional
 from app.database.database import get_db
 from app.core.auth import get_current_user_id
 from app.models.user_settings import UserSettings
+from app.models.activity_log import ActivityLog
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
@@ -54,4 +55,12 @@ def update_settings(
         
     db.commit()
     db.refresh(settings)
+    # Log activity
+    try:
+        changed = list(settings_update.dict(exclude_unset=True).keys())
+        log = ActivityLog(user_id=user_id, action="SETTINGS_UPDATED", details=f"Updated: {', '.join(changed)}")
+        db.add(log)
+        db.commit()
+    except Exception:
+        pass
     return settings
