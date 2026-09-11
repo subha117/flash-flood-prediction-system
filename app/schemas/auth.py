@@ -15,6 +15,8 @@ class UserRegister(BaseModel):
         min_length=8,
         max_length=128,
     )
+    
+    role: str = "user"
 
 
 class UserLogin(BaseModel):
@@ -31,6 +33,7 @@ class UserResponse(BaseModel):
     id: int
     name: str
     email: EmailStr
+    role: str
 
     model_config = {
         "from_attributes": True,

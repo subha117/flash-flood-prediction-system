@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 
 def get_live_weather(latitude: float, longitude: float):
     # Try Open-Meteo
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=precipitation&past_days=7"
+    # Request past_days=2 to ensure we have at least 24 hours in the past
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=precipitation&past_days=2"
     try:
         with httpx.Client(timeout=5.0) as client:
             resp = client.get(url)
@@ -12,14 +13,25 @@ def get_live_weather(latitude: float, longitude: float):
             
             cur = data.get("current", {})
             hourly_precip = data.get("hourly", {}).get("precipitation", [])
+            hourly_time = data.get("hourly", {}).get("time", [])
             
-            if len(hourly_precip) >= 24:
-                # Calculate features
-                p_1h = sum(hourly_precip[-1:])
-                p_3h = sum(hourly_precip[-3:])
-                p_6h = sum(hourly_precip[-6:])
-                p_12h = sum(hourly_precip[-12:])
-                p_24h = sum(hourly_precip[-24:])
+            # Find the index of the current hour
+            current_time_str = cur.get("time") # e.g. "2023-10-25T14:00"
+            
+            try:
+                current_idx = hourly_time.index(current_time_str)
+            except ValueError:
+                # Fallback if exact time string not found
+                current_idx = len(hourly_precip) - 1
+
+            if current_idx >= 24:
+                # Calculate features using the past 24 hours up to the current hour
+                past_24h = hourly_precip[current_idx-23 : current_idx+1]
+                p_1h = sum(past_24h[-1:])
+                p_3h = sum(past_24h[-3:])
+                p_6h = sum(past_24h[-6:])
+                p_12h = sum(past_24h[-12:])
+                p_24h = sum(past_24h)
                 mm_hr = p_1h
             else:
                 p_1h = p_3h = p_6h = p_12h = p_24h = mm_hr = 0.0
@@ -64,6 +76,10 @@ def get_rainfall_history(latitude: float, longitude: float):
             times = daily.get("time", [])
             precips = daily.get("precipitation_sum", [])
             history = []
+            
+            # The API returns 7 past days + current day (and future depending on forecast). 
+            # We want to make sure we just get past days.
+            # We just take all of them and the frontend slices the last 7 items.
             for t, p in zip(times, precips):
                 history.append({"date": t, "rainfall": p})
             return {"history": history, "data_source": "LIVE"}
