@@ -25,18 +25,27 @@ export default function AdminDashboard({ onNavigate, onHome }) {
 
   useEffect(() => {
     if (!token) return;
-    // Fetch system stats
-    fetch(`${API}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setStats).catch(() => {});
-    // Fetch users
-    fetch(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setUsers).catch(() => {});
-    // Fetch alerts
-    fetch(`${API}/alerts`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setAlerts).catch(() => {});
-    // Fetch predictions
-    fetch(`${API}/predictions/history`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setPredictions).catch(() => {});
+    
+    const fetchData = () => {
+      // Fetch system stats
+      fetch(`${API}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(setStats).catch(() => {});
+      // Fetch users
+      fetch(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(setUsers).catch(() => {});
+      // Fetch alerts
+      fetch(`${API}/alerts`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(setAlerts).catch(() => {});
+      // Fetch predictions
+      fetch(`${API}/predictions/history`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.json()).then(setPredictions).catch(() => {});
+    };
+
+    fetchData(); // initial fetch
+
+    // Auto-refresh every 10 seconds for live monitoring
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, [token]);
 
   const handleRoleChange = async (userId, newRole) => {
@@ -83,9 +92,9 @@ export default function AdminDashboard({ onNavigate, onHome }) {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
+    <div style={{ minHeight: '100vh', background: '#f1f5f9' }}>
       <Sidebar activePage="admin" onNavigate={onNavigate} onHome={onHome} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ marginLeft: '248px', width: 'calc(100% - 248px)', display: 'flex', flexDirection: 'column', height: '100vh' }}>
         <Navbar onNavigate={onNavigate} />
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Left nav */}

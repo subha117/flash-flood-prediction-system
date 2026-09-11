@@ -15,8 +15,10 @@ function Navbar({ title, subtitle }) {
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
+  const notificationDropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -26,6 +28,9 @@ function Navbar({ title, subtitle }) {
       }
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
         setProfileDropdownOpen(false);
+      }
+      if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(e.target)) {
+        setNotificationDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -89,9 +94,31 @@ function Navbar({ title, subtitle }) {
         </form>
 
         <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div className="navbar-notification">
-            <Bell size={18} />
-            {alerts && alerts.length > 0 && <span>{alerts.length}</span>}
+          <div className="navbar-notification-container" ref={notificationDropdownRef} style={{ position: 'relative' }}>
+            <div className="navbar-notification" onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)}>
+              <Bell size={18} />
+              {alerts && alerts.length > 0 && <span>{alerts.length}</span>}
+            </div>
+
+            {notificationDropdownOpen && (
+              <div className="navbar-dropdown" style={{ minWidth: '280px', padding: '12px' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#1e293b', paddingBottom: '8px', borderBottom: '1px solid #f1f5f9' }}>Notifications</h4>
+                {alerts && alerts.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
+                    {alerts.map((alert, idx) => (
+                      <div key={idx} style={{ padding: '8px', background: '#fef2f2', borderRadius: '6px', border: '1px solid #fecaca' }}>
+                        <strong style={{ display: 'block', fontSize: '13px', color: '#991b1b', marginBottom: '2px' }}>{alert.type}</strong>
+                        <span style={{ fontSize: '12px', color: '#b91c1c' }}>{alert.location_name} • Risk: {alert.severity}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ padding: '20px 10px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                    No active alerts.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="navbar-profile-container" ref={profileDropdownRef}>

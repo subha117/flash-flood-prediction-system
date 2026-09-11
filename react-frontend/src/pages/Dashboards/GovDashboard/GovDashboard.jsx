@@ -27,8 +27,16 @@ export default function GovDashboard({ onNavigate, onHome }) {
   const [activeSection, setActiveSection] = useState('overview');
 
   useEffect(() => {
-    fetch(`${API}/alerts`).then(r => r.json()).then(setAlerts).catch(() => {});
-    fetch(`${API}/predictions/history`).then(r => r.json()).then(setPredictions).catch(() => {});
+    const fetchData = () => {
+      fetch(`${API}/alerts`).then(r => r.json()).then(setAlerts).catch(() => {});
+      fetch(`${API}/predictions/history`).then(r => r.json()).then(setPredictions).catch(() => {});
+    };
+    
+    fetchData(); // Initial fetch
+    
+    // Live update every 10 seconds
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleBroadcast = async () => {
@@ -77,9 +85,9 @@ export default function GovDashboard({ onNavigate, onHome }) {
   const criticalAlerts = alerts.filter(a => ['CRITICAL', 'HIGH'].includes(a.risk_level));
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
+    <div style={{ minHeight: '100vh', background: '#f1f5f9' }}>
       <Sidebar activePage="gov" onNavigate={onNavigate} onHome={onHome} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ marginLeft: '248px', width: 'calc(100% - 248px)', display: 'flex', flexDirection: 'column', height: '100vh' }}>
         <Navbar onNavigate={onNavigate} />
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Left nav */}
