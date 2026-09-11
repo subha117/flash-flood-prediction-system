@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import Sidebar from "../../../components/Sidebar/Sidebar";
 import Navbar from "../../../components/Navbar/Navbar";
 import { CloudRain, Droplets, Bell, Clock3, ShieldAlert, Thermometer, Wind } from "lucide-react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { LocationContext } from "../../../context/LocationContext";
@@ -44,7 +44,7 @@ function AlertMarker({ alert, updateLocation }) {
       icon={alertIcon}
       eventHandlers={{ click: () => updateLocation(alert.latitude, alert.longitude) }}
     >
-      <L.Tooltip direction="top" offset={[0, -10]} opacity={1}>
+      <Tooltip direction="top" offset={[0, -10]} opacity={1}>
         <div style={{ textAlign: "center" }}>
           <strong>{alert.location_name}</strong><br/>
           <span style={{ color: isHighRisk ? "#dc2626" : "#d97706", fontWeight: "bold" }}>
@@ -53,7 +53,7 @@ function AlertMarker({ alert, updateLocation }) {
           <br/>
           Prob: {(alert.probability * 100).toFixed(1)}%
         </div>
-      </L.Tooltip>
+      </Tooltip>
     </Marker>
   );
 }
