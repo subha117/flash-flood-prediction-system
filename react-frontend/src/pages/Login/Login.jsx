@@ -1,14 +1,15 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import "./Login.css";
 import flashFloodLogo from "../../assets/flashflood-logo.png";
-import { useNavigate } from "react-router-dom";
 
 function Login({ onSignup, onLoginSuccess }) {
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -25,7 +26,7 @@ function Login({ onSignup, onLoginSuccess }) {
       await login(formData.email, formData.password);
       onLoginSuccess();
     } catch (err) {
-      setError(err.message);
+      setError("Invalid email or password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -33,33 +34,136 @@ function Login({ onSignup, onLoginSuccess }) {
 
   return (
     <div className="login-page">
-      <div className="login-container">
-        <div className="login-header">
-          <img src={flashFloodLogo} alt="FlashFlood System Logo" className="login-logo" />
+      {/* ── LEFT PANEL ─────────────────────────────────── */}
+      <div className="login-left">
+        {/* Logo */}
+        <div className="Login-brand">
+          <img src={flashFloodLogo} alt="FlashFlood Logo" className="flashflood-logo" />
         </div>
 
-        <form className="login-form" onSubmit={handleLogin}>
-          {error && <div className="error-message">{error}</div>}
-          <div className="input-group">
-            <label htmlFor="email">Email</label>
-            <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Enter your email" required />
+        {/* Hero text */}
+        <div className="left-main">
+          <h1>Real-Time Flood<br />Prediction &amp; Monitoring</h1>
+          <p>AI-powered early warning system protecting communities<br />with live weather data, terrain analysis and ML risk scoring.</p>
+
+          {/* Feature icons */}
+          <div className="features">
+            <div className="feature">
+              <div className="feature-icon">🌧</div>
+              <span>Live Rainfall Tracking</span>
+            </div>
+            <div className="feature">
+              <div className="feature-icon">🤖</div>
+              <span>ML Risk Prediction</span>
+            </div>
+            <div className="feature">
+              <div className="feature-icon">🗺</div>
+              <span>Interactive Risk Map</span>
+            </div>
+            <div className="feature">
+              <div className="feature-icon">🔔</div>
+              <span>Instant Flood Alerts</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── RIGHT PANEL ────────────────────────────────── */}
+      <div className="login-right">
+        <div className="login-card">
+          <h2>Welcome back</h2>
+          <p className="login-description">
+            Sign in to your account to access the flood monitoring dashboard.
+          </p>
+
+          {/* Error banner */}
+          {error && (
+            <div style={{
+              background: "#fee2e2", border: "1px solid #fca5a5",
+              color: "#991b1b", padding: "12px 16px", borderRadius: "10px",
+              marginBottom: "18px", fontSize: "14px", fontWeight: 500
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin}>
+            {/* Email */}
+            <div className="input-box">
+              <span className="input-icon">✉️</span>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleInputChange}
+                autoComplete="email"
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div className="input-box">
+              <span className="input-icon">🔒</span>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                className="password-eye"
+                onClick={() => setShowPassword(v => !v)}
+                tabIndex={-1}
+                aria-label="Toggle password visibility"
+              >
+                {showPassword ? "🙈" : "👁"}
+              </button>
+            </div>
+
+            {/* Remember / Forgot */}
+            <div className="login-options">
+              <label>
+                <input type="checkbox" /> Remember me
+              </label>
+              <button
+                type="button"
+                className="forgot-password"
+                onClick={() => alert("Please contact your administrator to reset your password.")}
+              >
+                Forgot Password?
+              </button>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="login-button"
+              disabled={loading}
+            >
+              {loading ? "Signing in…" : "Sign In"}
+            </button>
+          </form>
+
+          {/* Register link */}
+          <div className="register-prompt">
+            <span>Don't have an account?</span>
+            <button type="button" onClick={onSignup}>Create account</button>
           </div>
 
-          <div className="input-group">
-            <label htmlFor="password">Password</label>
-            <input type="password" id="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Enter your password" required />
+          {/* Security note */}
+          <div className="security-box">
+            <span className="security-icon">🔐</span>
+            <p>
+              Your session is protected with JWT authentication and token blacklisting.
+              All data is encrypted in transit over HTTPS. Passwords are hashed with bcrypt.
+            </p>
           </div>
-
-          <div className="forgot-password">
-            <span>Forgot Password?</span>
-          </div>
-
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        <p className="signup-link">Don't have an account? <span onClick={onSignup}>Sign up here</span></p>
+        </div>
       </div>
     </div>
   );
