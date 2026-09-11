@@ -1,136 +1,132 @@
-from pathlib import Path
-import joblib
-import pandas as pd
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .schemas import PredictionRequest, PredictionResponse, FeaturesResponse, LocationMetadata
-from .services.terrain import get_terrain_features
-from .services.rainfall import get_rainfall_features
+from app.core.exceptions import unexpected_error_handler
 
-# --------------------------------------------------
-# APP SETUP
-# --------------------------------------------------
+from app.api.location.routes import router as location_router
+from app.api.district.routes import router as district_router
+from app.api.auth.routes import router as auth_router
+from app.api.prediction.routes import router as prediction_router
+
+
 app = FastAPI(
-    title="Flash Flood Prediction API",
-    description="Machine learning API for flash flood risk prediction",
+    title="Flash Flood Prediction System API",
     version="1.0.0",
 )
 
-# --------------------------------------------------
-# CORS
-# --------------------------------------------------
+app.add_exception_handler(
+    Exception,
+    unexpected_error_handler,
+)
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --------------------------------------------------
-# LOAD MODEL
-# --------------------------------------------------
-BASE_DIR = Path(__file__).resolve().parent.parent
-MODEL_PATH = BASE_DIR / "ml" / "models" / "random_forest_flood.pkl"
-model = joblib.load(MODEL_PATH)
 
-FEATURES = [
-    "rainfall_mm_hr",
-    "elevation_m",
-    "slope_degree",
-    "rain_1h",
-    "rain_3h",
-    "rain_6h",
-    "rain_12h",
-    "rain_24h",
-    "rainfall_change",
-]
+app.include_router(auth_router,prefix="/api",)
+app.include_router(prediction_router,prefix="/api",)
+app.include_router(location_router, prefix="/api")
+app.include_router(district_router, prefix="/api")
 
-# --------------------------------------------------
-# ROUTES
-# --------------------------------------------------
 @app.get("/")
 def root():
-    return {"message": "Flash Flood Prediction API", "status": "running"}
+    return {
+        "message": "Flash Flood Prediction System API"
+    }
+
 
 @app.get("/health")
 def health():
-    return {"status": "healthy", "model": "random_forest_flood"}
-
-@app.get("/model-info")
-def model_info():
     return {
-        "model": "Random Forest Classifier",
-        "features": FEATURES,
-        "classes": [0, 1]
+        "status": "healthy"
+    }
+@app.get("/api/features")
+def get_features(latitude: float, longitude: float):
+    from app.services.weather_service import get_rainfall_data
+    import random
+    
+    # Mock terrain since arbitrary locations aren't in the DB
+    elevation_m = random.uniform(100, 2500)
+    slope_degree = random.uniform(0, 45)
+    
+    try:
+        weather = get_rainfall_data(latitude=latitude, longitude=longitude)
+    except Exception:
+        weather = {
+            "rain_1h": 0.0, "rain_3h": 0.0, "rain_6h": 0.0,
+            "rain_12h": 0.0, "rain_24h": 0.0
+        }
+        
+    return {
+        "elevation_m": elevation_m,
+        "slope_degree": slope_degree,
+        "rainfall_mm_hr": weather.get("rain_1h", 0.0),
+        "rain_1h": weather.get("rain_1h", 0.0),
+        "rain_3h": weather.get("rain_3h", 0.0),
+        "rain_6h": weather.get("rain_6h", 0.0),
+        "rain_12h": weather.get("rain_12h", 0.0),
+        "rain_24h": weather.get("rain_24h", 0.0),
     }
 
-@app.get("/features", response_model=FeaturesResponse)
-def get_features(latitude: float, longitude: float):
-    """
-    Retrieve terrain and rainfall features for a given location.
-    """
-    terrain = get_terrain_features(latitude, longitude)
-    if "error" in terrain:
-        return FeaturesResponse(latitude=latitude, longitude=longitude, error=terrain["error"])
-        
-    rainfall = get_rainfall_features(latitude, longitude)
-    if "error" in rainfall:
-        return FeaturesResponse(latitude=latitude, longitude=longitude, error=rainfall["error"])
-        
-    return FeaturesResponse(
-        latitude=latitude,
-        longitude=longitude,
-        elevation_m=terrain.get("elevation_m"),
-        slope_degree=terrain.get("slope_degree"),
-        rainfall_mm_hr=rainfall.get("rainfall_mm_hr"),
-        rain_1h=rainfall.get("rain_1h"),
-        rain_3h=rainfall.get("rain_3h"),
-        rain_6h=rainfall.get("rain_6h"),
-        rain_12h=rainfall.get("rain_12h"),
-        rain_24h=rainfall.get("rain_24h"),
-        rainfall_change=rainfall.get("rainfall_change")
-    )
+from pydantic import BaseModel
+class LegacyPredictRequest(BaseModel):
+    latitude: float
+    longitude: float
+    elevation_m: float
+    slope_degree: float
+    rainfall_mm_hr: float
+    rain_1h: float
+    rain_3h: float
+    rain_6h: float
+    rain_12h: float
+    rain_24h: float
 
-@app.post("/predict", response_model=PredictionResponse)
-def predict(request: PredictionRequest):
-    # Only use exactly the 9 features the model was trained on
-    data = pd.DataFrame(
-        [[
-            request.rainfall_mm_hr,
-            request.elevation_m,
-            request.slope_degree,
-            request.rain_1h,
-            request.rain_3h,
-            request.rain_6h,
-            request.rain_12h,
-            request.rain_24h,
-            request.rainfall_change,
-        ]],
-        columns=FEATURES,
-    )
-
+@app.post("/api/predict")
+def legacy_predict(request: LegacyPredictRequest):
+    from app.ml.model_loader import model
+    rainfall_change = request.rain_1h - (request.rain_3h / 3.0)
+    data = [[
+        request.rainfall_mm_hr,
+        request.elevation_m,
+        request.slope_degree,
+        request.rain_1h,
+        request.rain_3h,
+        request.rain_6h,
+        request.rain_12h,
+        request.rain_24h,
+        rainfall_change
+    ]]
     prediction = int(model.predict(data)[0])
     probability = float(model.predict_proba(data)[0][1])
-
+    
     if probability >= 0.70:
         risk_level = "HIGH"
     elif probability >= 0.40:
         risk_level = "MEDIUM"
     else:
         risk_level = "LOW"
+        
+    return {
+        "location": {"latitude": request.latitude, "longitude": request.longitude},
+        "prediction": prediction,
+        "flood_probability": probability,
+        "risk_level": risk_level,
+        "rainfall_change": rainfall_change
+    }
 
-    response = PredictionResponse(
-        prediction=prediction,
-        flood_probability=round(probability, 4),
-        risk_level=risk_level,
-    )
-    
-    # Safely attach location metadata if it was provided
-    if request.latitude is not None and request.longitude is not None:
-        response.location = LocationMetadata(
-            latitude=request.latitude,
-            longitude=request.longitude
-        )
+@app.get("/features")
+def legacy_get_features(latitude: float, longitude: float):
+    return get_features(latitude, longitude)
 
-    return response
+@app.post("/predict")
+def old_legacy_predict(request: LegacyPredictRequest):
+    return legacy_predict(request)
+
+@app.get("/api/health")
+def api_health():
+    return health()
