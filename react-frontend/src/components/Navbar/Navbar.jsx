@@ -106,9 +106,16 @@ function Navbar({ title, subtitle }) {
                 {alerts && alerts.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto' }}>
                     {alerts.map((alert, idx) => (
-                      <div key={idx} style={{ padding: '8px', background: '#fef2f2', borderRadius: '6px', border: '1px solid #fecaca' }}>
-                        <strong style={{ display: 'block', fontSize: '13px', color: '#991b1b', marginBottom: '2px' }}>{alert.type}</strong>
-                        <span style={{ fontSize: '12px', color: '#b91c1c' }}>{alert.location_name} • Risk: {alert.severity}</span>
+                      <div key={idx} style={{ padding: '8px', background: alert.risk_level === 'CRITICAL' ? '#fef2f2' : alert.risk_level === 'HIGH' ? '#fff1f2' : '#fffbeb', borderRadius: '6px', border: `1px solid ${alert.risk_level === 'CRITICAL' ? '#fecaca' : alert.risk_level === 'HIGH' ? '#fbcfe8' : '#fde68a'}` }}>
+                        <strong style={{ display: 'block', fontSize: '13px', color: alert.risk_level === 'CRITICAL' ? '#991b1b' : alert.risk_level === 'HIGH' ? '#be123c' : '#b45309', marginBottom: '4px' }}>
+                          {alert.risk_level} FLOOD RISK
+                        </strong>
+                        <span style={{ display: 'block', fontSize: '12px', color: '#475569', marginBottom: '2px' }}>
+                          <strong>{alert.location_name}</strong> • {(alert.probability * 100).toFixed(1)}% Prob
+                        </span>
+                        <span style={{ display: 'block', fontSize: '11px', color: '#64748b' }}>
+                          {alert.reason}
+                        </span>
                       </div>
                     ))}
                   </div>

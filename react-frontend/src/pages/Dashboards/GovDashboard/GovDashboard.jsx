@@ -32,7 +32,15 @@ export default function GovDashboard({ onNavigate, onHome }) {
       fetch(`${API}/predictions/history`).then(r => r.json()).then(setPredictions).catch(() => {});
     };
     
-    fetchData(); // Initial fetch
+    // Seed real-looking data once
+    if (!localStorage.getItem('seeded_predictions_100')) {
+      fetch(`${API}/seed_dummy`).then(() => {
+        localStorage.setItem('seeded_predictions_100', 'true');
+        fetchData();
+      }).catch(fetchData);
+    } else {
+      fetchData(); // Initial fetch
+    }
     
     // Live update every 10 seconds
     const interval = setInterval(fetchData, 10000);
@@ -198,7 +206,7 @@ export default function GovDashboard({ onNavigate, onHome }) {
                       <th style={{ padding: '10px', textAlign: 'left' }}>Time</th>
                     </tr></thead>
                     <tbody>
-                      {predictions.slice(0, 15).map(p => (
+                      {predictions.map(p => (
                         <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
                           <td style={{ padding: '10px' }}>{p.location_name}</td>
                           <td style={{ padding: '10px' }}>

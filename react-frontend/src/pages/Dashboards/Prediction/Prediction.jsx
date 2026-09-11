@@ -111,14 +111,30 @@ function Prediction({ onNavigate }) {
   const [prediction, setPrediction] = useState(null);
   const [predictionError, setPredictionError] = useState("");
 
-  // Recent predictions (stored in localStorage)
-  const [recentPredictions, setRecentPredictions] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("recentPredictions") || "[]");
-    } catch {
-      return [];
-    }
-  });
+  const [recentPredictions, setRecentPredictions] = useState([]);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/predictions/history");
+        if (res.ok) {
+          const data = await res.json();
+          // Map DB schema to frontend schema
+          const mapped = data.map(d => ({
+            location: d.location_name || `${d.latitude}, ${d.longitude}`,
+            predictionTime: new Date(d.timestamp || d.created_at).toLocaleString(),
+            probability: Math.round((d.flood_probability || 0) * 100),
+            riskLevel: d.risk_level || "UNKNOWN",
+            rainfall24h: d.rain_24h !== undefined ? d.rain_24h.toFixed(2) : (d.rainfall_24h !== undefined ? d.rainfall_24h.toFixed(2) : "—")
+          }));
+          setRecentPredictions(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch prediction history", err);
+      }
+    };
+    fetchHistory();
+  }, []);
 
   /* -------------------------------------------------------
      Load features whenever coordinates change
@@ -542,7 +558,6 @@ function Prediction({ onNavigate }) {
               <h2>Recent Predictions</h2>
               <button onClick={() => {
                 setRecentPredictions([]);
-                localStorage.removeItem("recentPredictions");
               }}>Clear History</button>
             </div>
 
