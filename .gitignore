@@ -42,4 +42,5 @@ data/processed/
 
 # Logs
 *.log
+*.db
 data/

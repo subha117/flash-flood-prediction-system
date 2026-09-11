@@ -14,6 +14,9 @@ import {
   FileText,
   Settings,
   CircleHelp,
+  Terminal,
+  Bot,
+  Sparkles,
   User,
   UserRound,
   SlidersHorizontal,
@@ -29,6 +32,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 
+import ChatBot from "../ChatBot/ChatBot";
 import logo from "../../assets/flashflood-logo.png";
 
 import "./Sidebar.css";
@@ -46,6 +50,8 @@ function Sidebar({
   const [settingsOpen, setSettingsOpen] = useState(
     activePage === "settings"
   );
+
+  const [chatOpen, setChatOpen] = useState(false);
 
   const [selectedSubPage, setSelectedSubPage] = useState(
     activeSubPage || "preferences"
@@ -315,16 +321,41 @@ function Sidebar({
         </p>
       </div>
 
-      {/* Help */}
-      <div className="sidebar-help">
-        <CircleHelp size={25} />
+      {/* HydroCopilot Assistant */}
+      <div
+        className="sidebar-help interactive-help"
+        onClick={() => setChatOpen((prev) => !prev)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setChatOpen((prev) => !prev);
+          }
+        }}
+        title="Toggle HydroCopilot Console (Ctrl+K)"
+      >
+        <div className="sidebar-help-icon-wrapper">
+          <Terminal size={20} className="sidebar-help-bot-icon" />
+          <span className="sidebar-help-pulse-dot" />
+        </div>
 
-        <div>
-          <strong>Need Help?</strong>
-
-          <small>View documentation →</small>
+        <div className="sidebar-help-text">
+          <div className="sidebar-help-header">
+            <strong>HydroCopilot</strong>
+            <span className="sidebar-help-badge">v2.4</span>
+          </div>
+          <small>Console & Triage (Ctrl+K)</small>
         </div>
       </div>
+
+      {/* Embedded ChatBot Component */}
+      <ChatBot
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        activePage={activePage}
+        showFloatingTrigger={!chatOpen}
+      />
     </aside>
   );
 }
