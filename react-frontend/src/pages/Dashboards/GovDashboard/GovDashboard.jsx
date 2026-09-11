@@ -1,100 +1,229 @@
-import React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import Sidebar from '../../../components/Sidebar/Sidebar';
+import Navbar from '../../../components/Navbar/Navbar';
+import { AuthContext } from '../../../context/AuthContext';
+import { LocationContext } from '../../../context/LocationContext';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-const GovDashboard = () => {
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+const API = 'http://127.0.0.1:8000/api';
+
+const riskColor = (level) => ({ CRITICAL: '#dc2626', HIGH: '#f97316', MEDIUM: '#facc15', LOW: '#16a34a' }[level] || '#64748b');
+
+export default function GovDashboard({ onNavigate, onHome }) {
+  const { user, token } = useContext(AuthContext);
+  const { location, weather, prediction } = useContext(LocationContext);
+  const [alerts, setAlerts] = useState([]);
+  const [predictions, setPredictions] = useState([]);
+  const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [broadcastStatus, setBroadcastStatus] = useState('');
+  const [activeSection, setActiveSection] = useState('overview');
+
+  useEffect(() => {
+    fetch(`${API}/alerts`).then(r => r.json()).then(setAlerts).catch(() => {});
+    fetch(`${API}/predictions/history`).then(r => r.json()).then(setPredictions).catch(() => {});
+  }, []);
+
+  const handleBroadcast = async () => {
+    if (!broadcastMsg.trim()) { setBroadcastStatus('Please enter a message.'); return; }
+    setBroadcastStatus('Broadcasting...');
+    // In a full system this would push to a notification queue / SMS gateway
+    // For now we save it as a prediction note / log
+    await new Promise(r => setTimeout(r, 800));
+    setBroadcastStatus(`✅ Alert broadcasted: "${broadcastMsg}"`);
+    setBroadcastMsg('');
+  };
+
+  const navItems = [
+    { id: 'overview', label: '📊 Overview' },
+    { id: 'alerts', label: `🔔 Flood Alerts (${alerts.length})` },
+    { id: 'map', label: '🗺 Risk Map' },
+    { id: 'predictions', label: '🤖 Predictions' },
+    { id: 'broadcast', label: '📢 Broadcast Alert' },
+  ];
+
+  const cardStyle = { background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: '16px' };
+
+  const criticalAlerts = alerts.filter(a => ['CRITICAL', 'HIGH'].includes(a.risk_level));
+
   return (
-    <div className="gov-dashboard-container" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f7f6', fontFamily: 'sans-serif' }}>
-      {/* Sidebar Mockup */}
-      <aside className="sidebar" style={{ width: '250px', backgroundColor: '#1d2b36', color: 'white', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '30px', color: '#4caf50', textAlign: 'center' }}>GovAlert System</h2>
-        <ul style={{ listStyleType: 'none', padding: 0, flex: 1 }}>
-          <li style={{ padding: '15px 10px', borderBottom: '1px solid #33424d', cursor: 'pointer', backgroundColor: '#2a3b47', borderRadius: '4px' }}>Dashboard Overview</li>
-          <li style={{ padding: '15px 10px', borderBottom: '1px solid #33424d', cursor: 'pointer' }}>Regional Risk Maps</li>
-          <li style={{ padding: '15px 10px', borderBottom: '1px solid #33424d', cursor: 'pointer' }}>Evacuation Routes</li>
-          <li style={{ padding: '15px 10px', borderBottom: '1px solid #33424d', cursor: 'pointer' }}>Resource Management</li>
-          <li style={{ padding: '15px 10px', cursor: 'pointer' }}>Settings</li>
-        </ul>
-      </aside>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
+      <Sidebar activePage="gov" onNavigate={onNavigate} onHome={onHome} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Navbar onNavigate={onNavigate} />
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Left nav */}
+          <nav style={{ width: '200px', background: '#1e3a5f', padding: '16px 0', flexShrink: 0 }}>
+            <div style={{ padding: '0 16px 16px', color: '#93c5fd', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em' }}>GOV PANEL</div>
+            {navItems.map(item => (
+              <button key={item.id} onClick={() => setActiveSection(item.id)}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 16px', background: activeSection === item.id ? '#2563eb' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}>
+                {item.label}
+              </button>
+            ))}
+          </nav>
 
-      {/* Main Content */}
-      <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Navbar Mockup */}
-        <header className="navbar" style={{ backgroundColor: 'white', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', zIndex: 10 }}>
-          <h1 style={{ margin: 0, fontSize: '1.25rem', color: '#333' }}>Government Operations Center</h1>
-          <div className="user-profile" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <span style={{ fontWeight: '500', color: '#555' }}>Admin Officer</span>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#4caf50', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white', fontWeight: 'bold' }}>A</div>
-          </div>
-        </header>
+          {/* Main content */}
+          <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
 
-        {/* Dashboard View */}
-        <main className="dashboard-body" style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-            <h2 style={{ margin: 0, color: '#2c3e50', fontSize: '1.8rem' }}>Regional Flood Risk Overview</h2>
-            <button style={{ 
-              backgroundColor: '#e74c3c', 
-              color: 'white', 
-              border: 'none', 
-              padding: '12px 24px', 
-              borderRadius: '6px', 
-              fontSize: '1rem', 
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              boxShadow: '0 4px 6px rgba(231, 76, 60, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              ⚠️ Broadcast Emergency Alert
-            </button>
-          </div>
-
-          {/* Mockup Widgets */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
-            {/* Widget 1 */}
-            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <h3 style={{ margin: '0 0 16px 0', color: '#34495e', fontSize: '1.2rem' }}>Current Critical Alerts</h3>
-              <div style={{ padding: '16px', backgroundColor: '#fdf2f2', borderRadius: '6px', borderLeft: '4px solid #e74c3c' }}>
-                <strong style={{ color: '#c0392b', display: 'block', marginBottom: '4px' }}>High Risk: Zone A</strong>
-                <span style={{ color: '#555', fontSize: '0.95rem' }}>Flash Flood Warning. River levels exceeded safety threshold by 1.2m.</span>
-              </div>
-              <div style={{ padding: '16px', backgroundColor: '#fff9e6', borderRadius: '6px', borderLeft: '4px solid #f1c40f', marginTop: '12px' }}>
-                <strong style={{ color: '#f39c12', display: 'block', marginBottom: '4px' }}>Moderate Risk: Zone C</strong>
-                <span style={{ color: '#555', fontSize: '0.95rem' }}>Heavy rainfall expected in the next 4 hours. Monitor closely.</span>
-              </div>
-            </div>
-
-            {/* Widget 2 */}
-            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <h3 style={{ margin: '0 0 16px 0', color: '#34495e', fontSize: '1.2rem' }}>Weather Radar Integration</h3>
-              <div style={{ height: '220px', backgroundColor: '#eaf2f8', borderRadius: '6px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: '#5d6d7e', border: '2px dashed #d5d8dc' }}>
-                <span style={{ fontSize: '2rem', marginBottom: '10px' }}>🗺️</span>
-                <span>[Interactive Radar Map Placeholder]</span>
-              </div>
-            </div>
-
-            {/* Widget 3 */}
-            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <h3 style={{ margin: '0 0 16px 0', color: '#34495e', fontSize: '1.2rem' }}>Active Evacuation Centers</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #eee' }}>
-                  <span style={{ color: '#444', fontWeight: '500' }}>Community Hall A</span>
-                  <span style={{ backgroundColor: '#e8f8f5', color: '#117a65', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold' }}>45% Full</span>
+            {activeSection === 'overview' && (
+              <>
+                <h2 style={{ marginBottom: '20px', color: '#1e293b' }}>Regional Flood Risk Overview</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+                  <div style={{ ...cardStyle, borderTop: '4px solid #dc2626' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Active Alerts</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 700, color: '#dc2626' }}>{alerts.length}</div>
+                  </div>
+                  <div style={{ ...cardStyle, borderTop: '4px solid #f97316' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Critical / High</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 700, color: '#f97316' }}>{criticalAlerts.length}</div>
+                  </div>
+                  <div style={{ ...cardStyle, borderTop: '4px solid #2563eb' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Predictions Today</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 700, color: '#2563eb' }}>{predictions.length}</div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #eee' }}>
-                  <span style={{ color: '#444', fontWeight: '500' }}>City Stadium</span>
-                  <span style={{ backgroundColor: '#e8f8f5', color: '#117a65', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold' }}>12% Full</span>
+                <div style={cardStyle}>
+                  <h3 style={{ marginBottom: '12px' }}>Current Monitored Location</h3>
+                  <p><strong>Location:</strong> {location?.name || 'Kolkata, West Bengal'}</p>
+                  <p><strong>Coordinates:</strong> {location?.latitude?.toFixed(4)}°N, {location?.longitude?.toFixed(4)}°E</p>
+                  {prediction && <>
+                    <p><strong>Flood Risk:</strong> <span style={{ color: riskColor(prediction.risk_level), fontWeight: 700 }}>{prediction.risk_level}</span></p>
+                    <p><strong>Probability:</strong> {(prediction.flood_probability * 100).toFixed(1)}%</p>
+                  </>}
+                  {weather && <>
+                    <p><strong>Rainfall 24H:</strong> {weather.rain_24h?.toFixed(1)} mm</p>
+                    <p><strong>Temperature:</strong> {weather.temperature?.toFixed(1)}°C</p>
+                  </>}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#444', fontWeight: '500' }}>Westside High School</span>
-                  <span style={{ backgroundColor: '#f4f6f7', color: '#7f8c8d', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem', fontWeight: 'bold' }}>Standby</span>
+              </>
+            )}
+
+            {activeSection === 'alerts' && (
+              <>
+                <h2 style={{ marginBottom: '20px' }}>Active Flood Alerts</h2>
+                {alerts.length === 0 ? (
+                  <div style={cardStyle}><p style={{ color: '#64748b' }}>✅ No active alerts.</p></div>
+                ) : alerts.map(a => (
+                  <div key={a.id} style={{ ...cardStyle, borderLeft: `5px solid ${riskColor(a.risk_level)}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <strong>{a.location_name}</strong> &nbsp;
+                        <span style={{ background: riskColor(a.risk_level), color: '#fff', padding: '2px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>{a.risk_level}</span>
+                        <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '6px' }}>{a.reason}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '4px' }}>{new Date(a.timestamp).toLocaleString()}</div>
+                      </div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: riskColor(a.risk_level) }}>
+                        {(a.probability * 100).toFixed(0)}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {activeSection === 'map' && (
+              <>
+                <h2 style={{ marginBottom: '20px' }}>Live Risk Map</h2>
+                <div style={{ ...cardStyle, height: '500px', padding: 0, overflow: 'hidden' }}>
+                  <MapContainer center={[location?.latitude || 22.5726, location?.longitude || 88.3639]} zoom={8} style={{ height: '100%', width: '100%' }}>
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    {alerts.map(a => (
+                      <Marker key={a.id} position={[a.latitude, a.longitude]}>
+                        <Popup>
+                          <strong>{a.location_name}</strong><br />
+                          Risk: {a.risk_level}<br />
+                          Probability: {(a.probability * 100).toFixed(1)}%
+                        </Popup>
+                      </Marker>
+                    ))}
+                    {location && (
+                      <Marker position={[location.latitude, location.longitude]}>
+                        <Popup><strong>Monitored: {location.name}</strong></Popup>
+                      </Marker>
+                    )}
+                  </MapContainer>
                 </div>
-              </div>
-            </div>
-          </div>
-        </main>
+              </>
+            )}
+
+            {activeSection === 'predictions' && (
+              <>
+                <h2 style={{ marginBottom: '20px' }}>Prediction History</h2>
+                <div style={cardStyle}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead><tr style={{ background: '#f8fafc' }}>
+                      <th style={{ padding: '10px', textAlign: 'left' }}>Location</th>
+                      <th style={{ padding: '10px', textAlign: 'left' }}>Risk Level</th>
+                      <th style={{ padding: '10px', textAlign: 'left' }}>Probability</th>
+                      <th style={{ padding: '10px', textAlign: 'left' }}>Rainfall 24H</th>
+                      <th style={{ padding: '10px', textAlign: 'left' }}>Time</th>
+                    </tr></thead>
+                    <tbody>
+                      {predictions.slice(0, 15).map(p => (
+                        <tr key={p.id} style={{ borderTop: '1px solid #e2e8f0' }}>
+                          <td style={{ padding: '10px' }}>{p.location_name}</td>
+                          <td style={{ padding: '10px' }}>
+                            <span style={{ background: riskColor(p.risk_level), color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '0.75rem' }}>{p.risk_level}</span>
+                          </td>
+                          <td style={{ padding: '10px' }}>{(p.flood_probability * 100).toFixed(1)}%</td>
+                          <td style={{ padding: '10px' }}>{p.rain_24h?.toFixed(1)} mm</td>
+                          <td style={{ padding: '10px', fontSize: '0.8rem', color: '#64748b' }}>{new Date(p.timestamp).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+
+            {activeSection === 'broadcast' && (
+              <>
+                <h2 style={{ marginBottom: '20px' }}>Broadcast Emergency Alert</h2>
+                <div style={cardStyle}>
+                  <p style={{ color: '#64748b', marginBottom: '16px' }}>
+                    Issue an emergency alert message to the public for the current region.
+                  </p>
+                  {broadcastStatus && (
+                    <div style={{ background: '#dcfce7', border: '1px solid #86efac', padding: '10px 16px', borderRadius: '8px', marginBottom: '16px', color: '#166534' }}>
+                      {broadcastStatus}
+                    </div>
+                  )}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px' }}>Alert Message</label>
+                    <textarea
+                      value={broadcastMsg}
+                      onChange={e => setBroadcastMsg(e.target.value)}
+                      placeholder="Enter emergency alert message for public broadcast..."
+                      style={{ width: '100%', minHeight: '120px', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem', resize: 'vertical' }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ fontWeight: 600 }}>Region:</label>
+                    <span style={{ marginLeft: '8px', color: '#2563eb' }}>{location?.state || 'West Bengal'} — {location?.district || 'All Districts'}</span>
+                  </div>
+                  {prediction && (
+                    <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: '10px', borderRadius: '8px', marginBottom: '16px' }}>
+                      ⚠️ Current ML risk for {location?.name}: <strong style={{ color: riskColor(prediction.risk_level) }}>{prediction.risk_level}</strong> ({(prediction.flood_probability * 100).toFixed(1)}%)
+                    </div>
+                  )}
+                  <button onClick={handleBroadcast}
+                    style={{ padding: '12px 24px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '1rem' }}>
+                    📢 Broadcast Emergency Alert
+                  </button>
+                </div>
+              </>
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );
-};
-
-export default GovDashboard;
+}

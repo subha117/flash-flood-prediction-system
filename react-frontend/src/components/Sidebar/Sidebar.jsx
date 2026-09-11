@@ -40,7 +40,7 @@ function Sidebar({
   onHome,
   onSubNavigate,
 }) {
-  const { location, lastUpdate, apiOnline } = useContext(LocationContext);
+  const { location, lastUpdate, apiOnline, alerts } = useContext(LocationContext);
   const { user } = useContext(AuthContext);
 
   const [settingsOpen, setSettingsOpen] = useState(
@@ -87,7 +87,7 @@ function Sidebar({
       id: "alerts",
       label: "Alerts",
       icon: Bell,
-      badge: 5,
+      badge: alerts?.length || 0,
     },
     {
       id: "reports",

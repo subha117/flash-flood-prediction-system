@@ -68,8 +68,14 @@ export const AuthProvider = ({ children }) => {
       const text = await res.text();
       throw new Error(`Registration failed: ${text}`);
     }
-    // Auto login after register
-    return await login(email, password);
+    // Auto login and return the user object (not just the JWT)
+    await login(email, password);
+    // After login, user state is set. Return the registered user's data for role-based redirect.
+    const meRes = await fetch(`${API_URL}/me`, {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    });
+    if (meRes.ok) return await meRes.json();
+    return { role: 'user' };
   };
 
   const logout = async () => {
