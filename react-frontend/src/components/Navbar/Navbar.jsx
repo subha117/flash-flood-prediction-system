@@ -54,14 +54,14 @@ function Navbar({ title, subtitle }) {
   };
 
   return (
-    <header className="dashboard-navbar">
-      <div className="navbar-left">
-        <h2>{title}</h2>
-        {subtitle && <span>{subtitle}</span>}
+    <header className="shared-navbar">
+      <div className="navbar-title">
+        <h1>{title}</h1>
+        {subtitle && <p>{subtitle}</p>}
       </div>
 
       <div className="navbar-right">
-        <form className="navbar-search" onSubmit={handleSearch} ref={dropdownRef} style={{ position: "relative" }}>
+        <form className="navbar-search" onSubmit={handleSearch} ref={dropdownRef}>
           <Search size={16} />
           <input
             type="text"
@@ -88,10 +88,11 @@ function Navbar({ title, subtitle }) {
           )}
         </form>
 
-        <div className="navbar-actions">
-          <button className="icon-btn">
+        <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div className="navbar-notification">
             <Bell size={18} />
-          </button>
+            <span>3</span>
+          </div>
 
           <div className="navbar-profile-container" ref={profileDropdownRef}>
             <div className="navbar-profile" onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>

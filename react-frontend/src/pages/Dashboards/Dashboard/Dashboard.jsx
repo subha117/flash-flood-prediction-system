@@ -22,9 +22,40 @@ function LocationMarker({ position, updateLocation }) {
     },
   });
   React.useEffect(() => {
-    if (position) map.flyTo(position, map.getZoom());
+    if (position) map.flyTo(position, 10, { animate: true, duration: 1.5 });
   }, [position, map]);
   return position ? <Marker position={position} /> : null;
+}
+
+function AlertMarker({ alert, updateLocation }) {
+  const isHighRisk = alert.risk_level === "CRITICAL" || alert.risk_level === "HIGH";
+  
+  // Create a red dot icon for alerts
+  const alertIcon = L.divIcon({
+    className: "custom-alert-marker",
+    html: `<div style="background-color: ${isHighRisk ? '#dc2626' : '#d97706'}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+
+  return (
+    <Marker 
+      position={[alert.latitude, alert.longitude]} 
+      icon={alertIcon}
+      eventHandlers={{ click: () => updateLocation(alert.latitude, alert.longitude) }}
+    >
+      <L.Tooltip direction="top" offset={[0, -10]} opacity={1}>
+        <div style={{ textAlign: "center" }}>
+          <strong>{alert.location_name}</strong><br/>
+          <span style={{ color: isHighRisk ? "#dc2626" : "#d97706", fontWeight: "bold" }}>
+            {alert.risk_level} RISK
+          </span>
+          <br/>
+          Prob: {(alert.probability * 100).toFixed(1)}%
+        </div>
+      </L.Tooltip>
+    </Marker>
+  );
 }
 
 function Dashboard({ onNavigate }) {
@@ -180,10 +211,15 @@ function Dashboard({ onNavigate }) {
                     <h2>Flood Risk Map ({location.name.split(",")[0]})</h2>
                     <button onClick={useCurrentLocation} style={{ padding: "6px 12px", borderRadius: "6px", background: "#2563eb", color: "white", border: "none", cursor: "pointer", fontSize: "0.8rem" }}>📍 Use My Current Location</button>
                   </div>
-                  <div style={{ flex: 1, position: "relative", minHeight: "400px", borderRadius: "8px", overflow: "hidden", marginTop: "12px" }}>
+                  <div style={{ flex: 1, position: "relative", minHeight: "400px", borderRadius: "8px", overflow: "hidden", marginTop: "12px", zIndex: 0 }}>
                     <MapContainer center={[location.latitude, location.longitude]} zoom={10} style={{ height: "100%", width: "100%" }}>
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
                       <LocationMarker position={[location.latitude, location.longitude]} updateLocation={updateLocation} />
+                      
+                      {/* Render active alerts on the map */}
+                      {alerts && alerts.map((alert, idx) => (
+                        <AlertMarker key={`alert-${idx}`} alert={alert} updateLocation={updateLocation} />
+                      ))}
                     </MapContainer>
                   </div>
                   <div style={{ padding: "10px 12px", background: "#f8fafc", marginTop: "8px", borderRadius: "6px", fontSize: "0.85rem" }}>
