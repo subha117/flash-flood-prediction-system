@@ -447,13 +447,17 @@ function HistoricalAnalysis({
                     setApiData(data);
                     setHasData(true);
                 } else {
+                    // No data for these filters — still render page with static fallback
+                    setApiData(null);
                     setHasData(false);
                 }
             } else {
+                setApiData(null);
                 setHasData(false);
             }
         } catch(err) {
-            console.error(err);
+            console.error("Historical fetch error:", err);
+            setApiData(null);
             setHasData(false);
         }
         setLoading(false);
@@ -938,20 +942,18 @@ function HistoricalAnalysis({
             NO DATA STATE
         =================================================== */}
         {!loading && !hasData && (
-            <div className="no-data-state" style={{ padding: '60px 20px', textAlign: 'center', background: '#fff', borderRadius: '12px', marginTop: '20px', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+            <div style={{ padding: '10px 0 0', marginBottom: '-8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#fef9c3', borderRadius: '8px', border: '1px solid #fde047', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '16px' }}>⚠️</span>
+                    <span style={{ fontSize: '13px', color: '#713f12' }}>No predictions found for these filters. Showing sample data below. <button onClick={handleReset} style={{ background: 'none', border: 'none', color: '#0284c7', textDecoration: 'underline', cursor: 'pointer', fontSize: '13px', padding: 0 }}>Clear Filters</button></span>
                 </div>
-                <h3 style={{ fontSize: '20px', color: '#334155', marginBottom: '8px' }}>No historical data available</h3>
-                <p style={{ color: '#64748b' }}>We couldn't find any historical flood records matching your selected filters.</p>
-                <button onClick={handleReset} style={{ marginTop: '20px', padding: '10px 20px', background: '#03182d', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Clear Filters</button>
             </div>
         )}
 
         {/* ===================================================
             STATS
         =================================================== */}
-        {!loading && hasData && (
+        {!loading && (
             <>
 
 
