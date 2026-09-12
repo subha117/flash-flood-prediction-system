@@ -70,11 +70,11 @@ function Navbar({ title, subtitle }) {
           <Search size={16} />
           <input
             type="text"
-            placeholder="Search location (e.g. Kolkata, Barasat)..."
+            placeholder="Search location..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          {searching && <span style={{ position: "absolute", right: 12, top: 10, fontSize: "0.8rem", color: "#94a3b8" }}>Searching...</span>}
+          {searching && <span style={{ position: "absolute", right: 12, top: 11, fontSize: "0.8rem", color: "#94a3b8" }}>...</span>}
           {results.length > 0 && (
             <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "white", border: "1px solid #e2e8f0", borderRadius: "0 0 8px 8px", zIndex: 1000, maxHeight: "300px", overflowY: "auto", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
               {results.map((r, i) => (
@@ -128,31 +128,31 @@ function Navbar({ title, subtitle }) {
             )}
           </div>
 
-          <div className="navbar-profile-container" ref={profileDropdownRef}>
-            <div className="navbar-profile" onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
-              <div className="navbar-avatar">
-                <User size={18} />
-              </div>
-              <div className="navbar-profile-info">
-                <strong>{user?.name || "User"}</strong>
-                <span>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}</span>
-              </div>
+        <div className="navbar-profile-container" ref={profileDropdownRef}>
+          <div className="navbar-profile" onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
+            <div className="navbar-avatar">
+              <User size={18} />
             </div>
-            
-            {profileDropdownOpen && (
-              <div className="navbar-dropdown">
-                <button onClick={() => { setProfileDropdownOpen(false); navigate('/settings'); }}>
-                  Settings
-                </button>
-                <button className="logout-btn" onClick={() => { setProfileDropdownOpen(false); logout(); navigate('/login'); }}>
-                  Logout
-                </button>
-              </div>
-            )}
+            <div className="navbar-profile-info">
+              <strong>{user?.name || "Souvik Konar"}</strong>
+              <span>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Admin"}</span>
+            </div>
           </div>
+          
+          {profileDropdownOpen && (
+            <div className="navbar-dropdown">
+              <button onClick={() => { setProfileDropdownOpen(false); navigate('/settings'); }}>
+                Settings
+              </button>
+              <button className="logout-btn" onClick={() => { setProfileDropdownOpen(false); logout(); navigate('/login'); }}>
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    </header>
-  );
+    </div>
+  </header>
+);
 }
 export default Navbar;

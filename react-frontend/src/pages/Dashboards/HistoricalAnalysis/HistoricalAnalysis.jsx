@@ -33,8 +33,8 @@ import "./HistoricalAnalysis.css";
 const historicalEvents = [
     {
         date: "30 Aug 2026, 10:30 AM",
-        location: "Selected Location",
-        district: "Selected District",
+        location: "Tehri",
+        district: "Tehri Garhwal",
         rainfall24: 135.2,
         maxRainfall1: 42.5,
         probability: 82,
@@ -216,8 +216,8 @@ function LineChart({
     values,
     secondaryValues,
     maxValue = 80,
-    color = "#1768d8",
-    secondaryColor = "#e53935",
+    color = "#2563eb",
+    secondaryColor = "#dc2626",
 }) {
     const width = 420;
     const height = 160;
@@ -230,6 +230,10 @@ function LineChart({
             maxValue
         );
 
+    const primaryAreaPoints = values.length
+        ? `0,${height} ${primaryPoints} ${width},${height}`
+        : "";
+
     const secondaryPoints =
         secondaryValues
             ? buildPolylinePoints(
@@ -240,6 +244,8 @@ function LineChart({
             )
             : "";
 
+    const gradId = `chartGrad-${color.replace(/[^a-zA-Z0-9]/g, "")}`;
+
     return (
         <div className="history-line-chart">
 
@@ -247,12 +253,16 @@ function LineChart({
                 viewBox={`0 0 ${width + 42} ${height + 35}`}
                 preserveAspectRatio="none"
             >
+                <defs>
+                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+                        <stop offset="100%" stopColor={color} stopOpacity="0.0" />
+                    </linearGradient>
+                </defs>
 
                 {/* GRID */}
-
                 {[0, 1, 2, 3, 4].map(
                     (line) => {
-
                         const y =
                             5 +
                             (line *
@@ -272,9 +282,15 @@ function LineChart({
                     }
                 )}
 
+                {/* AREA FILL */}
+                {primaryAreaPoints && (
+                    <polygon
+                        points={primaryAreaPoints}
+                        fill={`url(#${gradId})`}
+                    />
+                )}
 
                 {/* PRIMARY */}
-
                 <polyline
                     points={primaryPoints}
                     fill="none"
@@ -285,9 +301,7 @@ function LineChart({
                     vectorEffect="non-scaling-stroke"
                 />
 
-
                 {/* SECONDARY */}
-
                 {secondaryValues && (
                     <polyline
                         points={secondaryPoints}
@@ -302,16 +316,13 @@ function LineChart({
 
             </svg>
 
-
             <div className="chart-years">
-
                 <span>2021</span>
                 <span>2022</span>
                 <span>2023</span>
                 <span>2024</span>
                 <span>2025</span>
                 <span>2026</span>
-
             </div>
 
         </div>
@@ -371,8 +382,8 @@ function BarLineChart() {
                 <polyline
                     points={linePoints}
                     fill="none"
-                    stroke="#e53935"
-                    strokeWidth="2.2"
+                    stroke="#dc2626"
+                    strokeWidth="2.6"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     vectorEffect="non-scaling-stroke"
@@ -839,7 +850,7 @@ function HistoricalAnalysis({
                             </option>
 
                             <option>
-                                Selected Location Garhwal
+                                Tehri Garhwal
                             </option>
 
                             <option>
@@ -899,7 +910,7 @@ function HistoricalAnalysis({
                             </option>
 
                             <option>
-                                Selected Location
+                                Tehri
                             </option>
 
                             <option>
@@ -1341,7 +1352,7 @@ function HistoricalAnalysis({
                             {[
                                 ["Uttarkashi", 61, 16, "yellow"],
                                 ["Dehradun", 31, 29, "red"],
-                                ["Selected Location", 51, 36, "red"],
+                                ["Tehri", 51, 36, "red"],
                                 ["Rudraprayag", 72, 27, "yellow"],
                                 ["Pauri", 60, 53, "yellow"],
                                 ["Haridwar", 38, 63, "green"],
@@ -1377,7 +1388,7 @@ function HistoricalAnalysis({
                             </div>
 
                             <div className="historical-map-label tehrilabel">
-                                Selected Location Garhwal
+                                Tehri Garhwal
                             </div>
 
                             <div className="historical-map-label rudraprayag">
@@ -1667,13 +1678,13 @@ function HistoricalAnalysis({
                                 <tbody>
 
                                     {[
-                                        ["1", "12 Jul 2023", "Selected Location", "286.4 mm"],
+                                        ["1", "12 Jul 2023", "Tehri", "286.4 mm"],
                                         ["2", "17 Jun 2022", "Rudraprayag", "276.1 mm"],
                                         ["3", "23 Aug 2021", "Chamoli", "265.3 mm"],
                                         ["4", "31 Jul 2024", "Pauri Garhwal", "252.8 mm"],
                                         ["5", "05 Sep 2023", "Uttarkashi", "243.6 mm"],
                                         ["6", "15 Aug 2022", "Nainital", "238.9 mm"],
-                                        ["7", "29 Jul 2021", "Selected Location", "237.4 mm"],
+                                        ["7", "29 Jul 2021", "Tehri", "237.4 mm"],
                                         ["8", "03 Jul 2024", "Haridwar", "231.2 mm"],
                                         ["9", "21 Aug 2023", "Chamoli", "228.7 mm"],
                                         ["10", "11 Sep 2022", "Rudraprayag", "224.1 mm"],

@@ -9,11 +9,20 @@ def reverse_geocode(latitude: float, longitude: float):
             if resp.status_code == 200:
                 data = resp.json()
                 address = data.get("address", {})
-                city = address.get("city") or address.get("town") or address.get("village") or "Unknown"
-                district = address.get("state_district") or address.get("county") or "Unknown"
+                city = address.get("city") or address.get("town") or address.get("municipality") or address.get("village") or address.get("suburb") or "Unknown"
+                district = address.get("state_district") or address.get("county") or address.get("district") or "Unknown"
                 state = address.get("state", "Unknown")
                 country = address.get("country", "Unknown")
-                name = data.get("name") or city
+                
+                # Choose the best, most human-readable location name (city or district over narrow street name)
+                if city != "Unknown":
+                    name = city
+                elif district != "Unknown":
+                    name = district
+                elif data.get("name"):
+                    name = data.get("name")
+                else:
+                    name = f"{latitude:.4f}, {longitude:.4f}"
                 
                 return {
                     "name": name,

@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
+import { LocationContext } from "../../../context/LocationContext";
+import { AuthContext } from "../../../context/AuthContext";
 
 import {
     Bell,
@@ -15,6 +17,14 @@ import {
     ArrowRight,
     Check,
     Map,
+    MapPin,
+    Navigation,
+    Thermometer,
+    Droplets,
+    Wind,
+    Gauge,
+    Eye,
+    Compass,
     X,
     User,
     LogOut,
@@ -131,24 +141,24 @@ const rainfallByRange = {
         {
             name: "Haridwar",
             value: "5.7",
-            x: 17,
-            y: 68,
+            x: 18,
+            y: 65,
             size: 45,
             level: "low",
         },
         {
             name: "Nainital",
             value: "8.6",
-            x: 65,
-            y: 79,
+            x: 64,
+            y: 71,
             size: 48,
             level: "low",
         },
         {
             name: "Almora",
             value: "7.2",
-            x: 81,
-            y: 70,
+            x: 80,
+            y: 64,
             size: 46,
             level: "low",
         },
@@ -206,24 +216,24 @@ const rainfallByRange = {
         {
             name: "Haridwar",
             value: "28.7",
-            x: 17,
-            y: 68,
+            x: 18,
+            y: 65,
             size: 54,
             level: "low",
         },
         {
             name: "Nainital",
             value: "45.6",
-            x: 65,
-            y: 79,
+            x: 64,
+            y: 71,
             size: 60,
             level: "low",
         },
         {
             name: "Almora",
             value: "38.2",
-            x: 81,
-            y: 70,
+            x: 80,
+            y: 64,
             size: 54,
             level: "low",
         },
@@ -281,24 +291,24 @@ const rainfallByRange = {
         {
             name: "Haridwar",
             value: "104.7",
-            x: 17,
-            y: 68,
+            x: 18,
+            y: 65,
             size: 69,
             level: "medium",
         },
         {
             name: "Nainital",
             value: "156.6",
-            x: 65,
-            y: 79,
+            x: 64,
+            y: 71,
             size: 78,
             level: "medium",
         },
         {
             name: "Almora",
             value: "138.2",
-            x: 81,
-            y: 70,
+            x: 80,
+            y: 64,
             size: 74,
             level: "medium",
         },
@@ -356,25 +366,25 @@ const rainfallByRange = {
         {
             name: "Haridwar",
             value: "214.7",
-            x: 17,
-            y: 68,
+            x: 18,
+            y: 65,
             size: 82,
             level: "medium",
         },
         {
             name: "Nainital",
             value: "266.6",
-            x: 65,
-            y: 79,
+            x: 64,
+            y: 71,
             size: 88,
             level: "medium",
         },
         {
             name: "Almora",
             value: "238.2",
-            x: 81,
-            y: 70,
-            size: 84,
+            x: 80,
+            y: 64,
+            size: 82,
             level: "medium",
         },
     ],
@@ -602,46 +612,33 @@ function SummaryCard({
 }) {
     return (
         <div className="weather-summary-card">
-
-            <div className={`weather-summary-icon ${className}`}>
-                <Icon
-                    size={25}
-                    strokeWidth={1.8}
-                />
+            <div className="summary-card-header">
+                <span className="summary-title">{title}</span>
+                <div className={`weather-summary-icon ${className}`}>
+                    <Icon size={19} strokeWidth={1.8} />
+                </div>
             </div>
 
-            <div className="weather-summary-content">
+            <div className="summary-card-body">
+                <strong className="summary-value">{value}</strong>
+                <span className="summary-subtitle">{subtitle}</span>
+            </div>
 
-                <span className="summary-title">
-                    {title}
-                </span>
-
-                <strong className="summary-value">
-                    {value}
-                </strong>
-
-                <span className="summary-subtitle">
-                    {subtitle}
-                </span>
-
-                <div className="summary-status-row">
-
-                    <span className="summary-online">
+            <div className="summary-status-row">
+                {statusLeft && (
+                    <span className="summary-pill online">
                         <i></i>
                         {statusLeft}
                     </span>
+                )}
 
-                    {statusRight && (
-                        <span className="summary-offline">
-                            <i></i>
-                            {statusRight}
-                        </span>
-                    )}
-
-                </div>
-
+                {statusRight && (
+                    <span className="summary-pill offline">
+                        <i></i>
+                        {statusRight}
+                    </span>
+                )}
             </div>
-
         </div>
     );
 }
@@ -652,23 +649,31 @@ function SummaryCard({
 ========================================================= */
 
 function ForecastIcon({ type }) {
-
-    if (
-        type === "Rain" ||
-        type === "Light Rain"
-    ) {
+    if (type === "Rain" || type === "Light Rain" || type === "Heavy Rain") {
         return (
             <CloudRain
-                size={19}
+                size={20}
                 strokeWidth={1.8}
+                className="forecast-svg rain"
+            />
+        );
+    }
+
+    if (type === "Clear" || type === "Sunny") {
+        return (
+            <Sun
+                size={20}
+                strokeWidth={1.8}
+                className="forecast-svg sun"
             />
         );
     }
 
     return (
         <Cloud
-            size={19}
+            size={20}
             strokeWidth={1.8}
+            className="forecast-svg cloud"
         />
     );
 }
@@ -679,27 +684,284 @@ function ForecastIcon({ type }) {
 ========================================================= */
 
 function WeatherData({ onNavigate }) {
+    const {
+        location,
+        weather,
+        terrain,
+        history,
+        alerts,
+        lastUpdate,
+        apiOnline,
+        refreshData,
+        isDetectingLocation,
+        useCurrentLocation,
+        loading: contextLoading,
+    } = useContext(LocationContext) || {};
 
-    const [selectedRange, setSelectedRange] =
-        useState("24H");
+    const { user } = useContext(AuthContext) || {};
 
-    const [showNotifications, setShowNotifications] =
-        useState(false);
+    const [selectedRange, setSelectedRange] = useState("24H");
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [showProfile, setShowProfile] = useState(false);
+    const [showCoverage, setShowCoverage] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const [showProfile, setShowProfile] =
-        useState(false);
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        try {
+            if (refreshData) {
+                await refreshData();
+            }
+        } catch (err) {
+            console.error("Refresh error:", err);
+        } finally {
+            setTimeout(() => setIsRefreshing(false), 500);
+        }
+    };
 
-    const [showCoverage, setShowCoverage] =
-        useState(false);
+    const isLive = apiOnline !== false;
+    const currentLocationName =
+        location?.city && location.city !== "Unknown"
+            ? location.city
+            : (location?.district && location.district !== "Unknown"
+                ? location.district
+                : (location?.name || "Selected District"));
 
+    const currentRegionName =
+        location?.state && location.state !== "Unknown"
+            ? location.state
+            : (location?.district || "Selected Region");
 
-    const activeRainfallData =
-        useMemo(
-            () =>
-                rainfallByRange[selectedRange] ||
-                rainfallByRange["24H"],
-            [selectedRange]
+    const displayLocationText = useMemo(() => {
+        if (!location) return "Selected Location, Selected Region";
+        const primary = location.city && location.city !== "Unknown"
+            ? location.city
+            : (location.district && location.district !== "Unknown"
+                ? location.district
+                : location.name);
+        const secondary = location.state && location.state !== "Unknown"
+            ? location.state
+            : (location.district && location.district !== "Unknown" && location.district !== primary
+                ? location.district
+                : "");
+        return secondary ? `${primary}, ${secondary}` : primary;
+    }, [location]);
+
+    const dynamicSummaryCards = useMemo(() => [
+        {
+            title: "Rainfall Stations",
+            value: isLive ? "78" : "0",
+            subtitle: "Active Stations",
+            statusLeft: isLive ? "75 Online" : "0 Online",
+            statusRight: isLive ? "3 Offline" : "78 Offline",
+            icon: CloudRain,
+            className: "rainfall",
+        },
+        {
+            title: "Weather Stations",
+            value: isLive ? "24" : "0",
+            subtitle: "Active Stations",
+            statusLeft: isLive ? "23 Online" : "0 Online",
+            statusRight: isLive ? "1 Offline" : "24 Offline",
+            icon: RadioTower,
+            className: "weather",
+        },
+        {
+            title: "Satellite Sources",
+            value: "5",
+            subtitle: "Active Sources",
+            statusLeft: isLive ? "All Online" : "Connecting",
+            statusRight: "",
+            icon: Satellite,
+            className: "satellite",
+        },
+        {
+            title: "Data Layers",
+            value: terrain?.available ? "12" : "10",
+            subtitle: "Available Layers",
+            statusLeft: terrain?.available ? "11 Active" : "10 Active",
+            statusRight: terrain?.available ? "1 Inactive" : "2 Inactive",
+            icon: Layers,
+            className: "layers",
+        },
+    ], [isLive, terrain]);
+
+    const activeRainfallData = useMemo(() => {
+        const base = rainfallByRange[selectedRange] || rainfallByRange["24H"];
+        let liveVal = "135.2";
+        if (selectedRange === "1h") {
+            liveVal = weather?.rain_1h != null ? Number(weather.rain_1h).toFixed(1) : "12.6";
+        } else if (selectedRange === "24H") {
+            liveVal = weather?.rain_24h != null ? Number(weather.rain_24h).toFixed(1) : "135.2";
+        } else if (selectedRange === "7D") {
+            if (history && history.length > 0) {
+                const sum7d = history.slice(-7).reduce((acc, curr) => acc + (Number(curr.rainfall) || 0), 0);
+                liveVal = sum7d > 0 ? sum7d.toFixed(1) : "214.6";
+            } else {
+                liveVal = "214.6";
+            }
+        } else if (selectedRange === "30D") {
+            if (history && history.length > 0) {
+                const sumAll = history.reduce((acc, curr) => acc + (Number(curr.rainfall) || 0), 0);
+                liveVal = (sumAll * 2.2).toFixed(1);
+            } else {
+                liveVal = "650.4";
+            }
+        }
+
+        const numVal = parseFloat(liveVal) || 0;
+        const level = numVal > 150 ? "high" : numVal > 50 ? "medium" : "low";
+
+        const alreadyInBase = base.some(
+            (i) => i.name.toLowerCase() === currentLocationName.toLowerCase()
         );
+
+        return base
+            .map((item) => {
+                if (alreadyInBase) {
+                    if (item.name.toLowerCase() === currentLocationName.toLowerCase()) {
+                        return {
+                            ...item,
+                            value: liveVal,
+                            level: level,
+                        };
+                    }
+                    if (item.name === "Selected District") {
+                        return null;
+                    }
+                } else {
+                    if (item.name === "Selected District") {
+                        return {
+                            ...item,
+                            name: currentLocationName,
+                            value: liveVal,
+                            level: level,
+                        };
+                    }
+                }
+                return item;
+            })
+            .filter(Boolean);
+    }, [selectedRange, currentLocationName, weather, history]);
+
+    const currentTemp = weather?.temperature != null
+        ? `${Number(weather.temperature).toFixed(1)}°C`
+        : "24.8°C";
+
+    const currentWeatherType = weather?.weather_desc ||
+        (weather?.rainfall_mm_hr > 5 ? "Heavy Rain" :
+         weather?.rainfall_mm_hr > 0 ? "Light Rain" : "Partly Cloudy");
+
+    const feelsLike = weather?.feels_like != null
+        ? `${Number(weather.feels_like).toFixed(1)}°C`
+        : (weather?.temperature != null ? `${(Number(weather.temperature) + 1.2).toFixed(1)}°C` : "24.2°C");
+
+    const humidity = weather?.humidity != null
+        ? `${Math.round(weather.humidity)}%`
+        : "88%";
+
+    const windSpeed = weather?.wind_speed != null
+        ? `${Number(weather.wind_speed).toFixed(1)} km/h`
+        : "6.2 km/h";
+
+    const pressure = weather?.pressure != null
+        ? `${Math.round(weather.pressure)} hPa`
+        : "1006 hPa";
+
+    const visibility = weather?.visibility != null
+        ? `${Number(weather.visibility).toFixed(1)} km`
+        : "6.5 km";
+
+    const windDirection = weather?.wind_direction || "NE";
+
+    const activeHourlyForecast = useMemo(() => {
+        if (weather?.hourly_forecast && weather.hourly_forecast.length > 0) {
+            return weather.hourly_forecast.slice(0, 7);
+        }
+        return hourlyForecast;
+    }, [weather]);
+
+    const formattedLastUpdate = useMemo(() => {
+        const d = lastUpdate instanceof Date ? lastUpdate : new Date();
+        const dateStr = d.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
+        const timeStr = d.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+        return `${dateStr}, ${timeStr}`;
+    }, [lastUpdate]);
+
+    const dynamicDataSources = useMemo(() => [
+        {
+            source: "IMD Rainfall",
+            type: "Rainfall",
+            coverage: currentRegionName,
+            resolution: "Point",
+            status: isLive ? "Live" : "Offline",
+            updated: formattedLastUpdate,
+        },
+        {
+            source: "IMD Weather Stations",
+            type: "Weather",
+            coverage: currentRegionName,
+            resolution: "Point",
+            status: isLive ? "Live" : "Offline",
+            updated: formattedLastUpdate,
+        },
+        {
+            source: "INSAT-3DR",
+            type: "Satellite",
+            coverage: currentRegionName,
+            resolution: "4 km",
+            status: isLive ? "Live" : "Offline",
+            updated: formattedLastUpdate,
+        },
+        {
+            source: "GPM IMERG",
+            type: "Rainfall (Satellite)",
+            coverage: "Global",
+            resolution: "10 km",
+            status: isLive ? "Live" : "Offline",
+            updated: formattedLastUpdate,
+        },
+        {
+            source: "SMAP",
+            type: "Soil Moisture",
+            coverage: "Global",
+            resolution: "9 km",
+            status: isLive ? "Live" : "Offline",
+            updated: formattedLastUpdate,
+        },
+        {
+            source: "SRTM DEM",
+            type: "Elevation",
+            coverage: currentRegionName,
+            resolution: "30 m",
+            status: isLive ? "Live" : "Offline",
+            updated: formattedLastUpdate,
+        },
+        {
+            source: "River Network",
+            type: "Hydrology",
+            coverage: currentRegionName,
+            resolution: "Vector",
+            status: isLive ? "Live" : "Offline",
+            updated: formattedLastUpdate,
+        },
+        {
+            source: "Historical Flood Data",
+            type: "Event Data",
+            coverage: currentRegionName,
+            resolution: "Point",
+            status: isLive ? "Live" : "Offline",
+            updated: formattedLastUpdate,
+        },
+    ], [isLive, currentRegionName, formattedLastUpdate]);
 
 
     /* =======================================================
@@ -770,16 +1032,16 @@ function WeatherData({ onNavigate }) {
                         <button
                             className="weather-refresh-button"
                             type="button"
-                            onClick={() =>
-                                window.location.reload()
-                            }
+                            onClick={handleRefresh}
+                            disabled={isRefreshing || contextLoading}
                         >
 
                             <RefreshCw
                                 size={15}
+                                className={isRefreshing || contextLoading ? "spin-animation" : ""}
                             />
 
-                            Refresh Data
+                            {isRefreshing || contextLoading ? "Refreshing..." : "Refresh Data"}
 
                         </button>
 
@@ -803,7 +1065,7 @@ function WeatherData({ onNavigate }) {
                                 />
 
                                 <span>
-                                    7
+                                    {alerts && alerts.length > 0 ? alerts.length : 2}
                                 </span>
 
                             </button>
@@ -817,55 +1079,52 @@ function WeatherData({ onNavigate }) {
                                         Notifications
                                     </div>
 
-
-                                    <div className="notification-item">
-
-                                        <div className="notification-icon warning">
-
-                                            <AlertCircle
-                                                size={15}
-                                            />
-
-                                        </div>
-
-                                        <div>
-
-                                            <strong>
-                                                Heavy rainfall detected
-                                            </strong>
-
-                                            <span>
-                                                Selected Location Garhwal
-                                            </span>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <div className="notification-item">
-
-                                        <div className="notification-icon success">
-
-                                            <Check
-                                                size={15}
-                                            />
-
-                                        </div>
-
-                                        <div>
-
-                                            <strong>
-                                                Weather data updated
-                                            </strong>
-
-                                            <span>
-                                                All stations online
-                                            </span>
-
-                                        </div>
-
-                                    </div>
+                                    {alerts && alerts.length > 0 ? (
+                                        alerts.slice(0, 4).map((alt, idx) => (
+                                            <div className="notification-item" key={idx}>
+                                                <div className="notification-icon warning">
+                                                    <AlertCircle size={15} />
+                                                </div>
+                                                <div>
+                                                    <strong>
+                                                        {alt.reason || `${alt.risk_level} Risk Detected`}
+                                                    </strong>
+                                                    <span>
+                                                        {alt.location_name || currentLocationName}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <>
+                                            <div className="notification-item">
+                                                <div className="notification-icon warning">
+                                                    <AlertCircle size={15} />
+                                                </div>
+                                                <div>
+                                                    <strong>
+                                                        Monitoring Active
+                                                    </strong>
+                                                    <span>
+                                                        {currentLocationName}, {currentRegionName}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="notification-item">
+                                                <div className="notification-icon success">
+                                                    <Check size={15} />
+                                                </div>
+                                                <div>
+                                                    <strong>
+                                                        Weather data synchronized
+                                                    </strong>
+                                                    <span>
+                                                        All feeds online ({isLive ? "Live" : "Standby"})
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
 
                                 </div>
 
@@ -899,11 +1158,11 @@ function WeatherData({ onNavigate }) {
                                 <div className="weather-profile-details">
 
                                     <strong>
-                                        Souvik Konar
+                                        {user?.name || "Souvik Konar"}
                                     </strong>
 
                                     <span>
-                                        Admin
+                                        {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Admin"}
                                     </span>
 
                                 </div>
@@ -987,7 +1246,7 @@ function WeatherData({ onNavigate }) {
 
                     <section className="weather-summary-grid">
 
-                        {summaryCards.map(
+                        {dynamicSummaryCards.map(
                             (card) => (
 
                                 <SummaryCard
@@ -1003,33 +1262,32 @@ function WeatherData({ onNavigate }) {
 
                         <div className="weather-summary-card">
 
-                            <div className="weather-summary-icon quality">
-
-                                <ShieldCheck
-                                    size={25}
-                                    strokeWidth={1.8}
-                                />
-
-                            </div>
-
-                            <div className="weather-summary-content">
-
+                            <div className="summary-card-header">
                                 <span className="summary-title">
                                     Data Quality
                                 </span>
+                                <div className="weather-summary-icon quality">
+                                    <ShieldCheck
+                                        size={19}
+                                        strokeWidth={1.8}
+                                    />
+                                </div>
+                            </div>
 
+                            <div className="summary-card-body">
                                 <strong className="summary-value">
-                                    92%
+                                    {isLive ? "92%" : "72%"}
                                 </strong>
-
                                 <span className="summary-subtitle">
                                     Overall Quality
                                 </span>
+                            </div>
 
-                                <span className="quality-good">
-                                    Good
+                            <div className="summary-status-row">
+                                <span className={`summary-pill ${isLive ? "online" : "warning"}`}>
+                                    <i></i>
+                                    {isLive ? "Good Condition" : "Fair Condition"}
                                 </span>
-
                             </div>
 
                         </div>
@@ -1050,18 +1308,14 @@ function WeatherData({ onNavigate }) {
 
                             <div className="weather-card-header">
 
-                                <h2>
+                                <div className="weather-card-title-wrap">
+                                    <h2>
+                                        Real-time Rainfall (mm)
+                                        <Info size={14} className="header-info-icon" />
+                                    </h2>
+                                </div>
 
-                                    Real-time Rainfall (mm)
-
-                                    <Info
-                                        size={13}
-                                    />
-
-                                </h2>
-
-
-                                <div className="range-tabs">
+                                <div className="range-tabs-pill">
 
                                     {[
                                         "1h",
@@ -1074,11 +1328,11 @@ function WeatherData({ onNavigate }) {
                                             <button
                                                 key={range}
                                                 type="button"
-                                                className={
+                                                className={`range-tab-btn ${
                                                     selectedRange === range
                                                         ? "active"
                                                         : ""
-                                                }
+                                                }`}
                                                 onClick={() =>
                                                     setSelectedRange(
                                                         range
@@ -1100,13 +1354,15 @@ function WeatherData({ onNavigate }) {
 
                                 <div className="rainfall-map">
 
+                                    <div className="radar-grid-bg"></div>
+
                                     <div className="uttarakhand-shape">
 
                                         {activeRainfallData.map(
-                                            (location) => (
+                                            (location, idx) => (
 
                                                 <div
-                                                    key={location.name}
+                                                    key={`${location.name}-${idx}`}
                                                     className={`rainfall-bubble ${location.level}`}
                                                     style={{
                                                         left:
@@ -1128,10 +1384,10 @@ function WeatherData({ onNavigate }) {
 
 
                                         {activeRainfallData.map(
-                                            (location) => (
+                                            (location, idx) => (
 
                                                 <div
-                                                    key={`${location.name}-label`}
+                                                    key={`${location.name}-label-${idx}`}
                                                     className="rainfall-label"
                                                     style={{
                                                         left:
@@ -1160,8 +1416,7 @@ function WeatherData({ onNavigate }) {
 
                                     <div className="rainfall-map-footer">
 
-                                        Data represents total rainfall for
-                                        the selected period
+                                        <span>Data represents total rainfall for the selected period</span>
 
                                     </div>
 
@@ -1219,38 +1474,57 @@ function WeatherData({ onNavigate }) {
 
                             <div className="weather-card-header">
 
-                                <h2>
-                                    Current Weather Overview
-                                </h2>
+                                <div className="weather-card-title-wrap">
+                                    <h2>
+                                        Current Weather Overview
+                                    </h2>
+                                </div>
 
-                                <span className="weather-location">
-                                    Selected Location, Selected Region
-                                </span>
+                                <button
+                                    type="button"
+                                    className={`weather-location-badge-btn ${location?.source === "gps" ? "is-gps" : ""}`}
+                                    onClick={useCurrentLocation}
+                                    title="Click to detect and sync your current live location"
+                                    disabled={isDetectingLocation}
+                                >
+                                    <Navigation size={13} className={`weather-location-pin ${isDetectingLocation ? "spin-animation" : ""}`} />
+                                    <span>{isDetectingLocation ? "Detecting GPS location..." : displayLocationText}</span>
+                                    <span className="location-source-chip">
+                                        {isDetectingLocation ? "Detecting..." : (location?.source === "gps" ? "Live GPS" : "Auto Detect")}
+                                    </span>
+                                </button>
 
                             </div>
 
 
                             <div className="current-weather-main">
 
-                                <div className="current-weather-summary">
+                                <div className="current-weather-hero">
 
-                                    <div className="current-weather-icon">
+                                    <div className="current-weather-icon-box">
 
-                                        <CloudRain
-                                            size={43}
-                                            strokeWidth={1.5}
-                                        />
+                                        {currentWeatherType.includes("Rain") ? (
+                                            <CloudRain
+                                                size={46}
+                                                strokeWidth={1.6}
+                                            />
+                                        ) : (
+                                            <Cloud
+                                                size={46}
+                                                strokeWidth={1.6}
+                                            />
+                                        )}
 
                                     </div>
 
-                                    <div>
+                                    <div className="current-weather-hero-meta">
 
-                                        <strong>
-                                            24.8°C
+                                        <strong className="current-weather-temp">
+                                            {currentTemp}
                                         </strong>
 
-                                        <span>
-                                            Light Rain
+                                        <span className="weather-condition-pill">
+                                            {currentWeatherType}
                                         </span>
 
                                     </div>
@@ -1260,34 +1534,52 @@ function WeatherData({ onNavigate }) {
 
                                 <div className="weather-metrics">
 
-                                    <div>
-                                        <span>Feels Like</span>
-                                        <strong>24.2°C</strong>
+                                    <div className="weather-metric-tile">
+                                        <div className="metric-tile-header">
+                                            <Thermometer size={13} className="metric-icon" />
+                                            <span>Feels Like</span>
+                                        </div>
+                                        <strong>{feelsLike}</strong>
                                     </div>
 
-                                    <div>
-                                        <span>Humidity</span>
-                                        <strong>88%</strong>
+                                    <div className="weather-metric-tile">
+                                        <div className="metric-tile-header">
+                                            <Droplets size={13} className="metric-icon" />
+                                            <span>Humidity</span>
+                                        </div>
+                                        <strong>{humidity}</strong>
                                     </div>
 
-                                    <div>
-                                        <span>Wind Speed</span>
-                                        <strong>6.2 km/h</strong>
+                                    <div className="weather-metric-tile">
+                                        <div className="metric-tile-header">
+                                            <Wind size={13} className="metric-icon" />
+                                            <span>Wind Speed</span>
+                                        </div>
+                                        <strong>{windSpeed}</strong>
                                     </div>
 
-                                    <div>
-                                        <span>Pressure</span>
-                                        <strong>1006 hPa</strong>
+                                    <div className="weather-metric-tile">
+                                        <div className="metric-tile-header">
+                                            <Gauge size={13} className="metric-icon" />
+                                            <span>Pressure</span>
+                                        </div>
+                                        <strong>{pressure}</strong>
                                     </div>
 
-                                    <div>
-                                        <span>Visibility</span>
-                                        <strong>6.5 km</strong>
+                                    <div className="weather-metric-tile">
+                                        <div className="metric-tile-header">
+                                            <Eye size={13} className="metric-icon" />
+                                            <span>Visibility</span>
+                                        </div>
+                                        <strong>{visibility}</strong>
                                     </div>
 
-                                    <div>
-                                        <span>Direction</span>
-                                        <strong>NE</strong>
+                                    <div className="weather-metric-tile">
+                                        <div className="metric-tile-header">
+                                            <Compass size={13} className="metric-icon" />
+                                            <span>Direction</span>
+                                        </div>
+                                        <strong>{windDirection}</strong>
                                     </div>
 
                                 </div>
@@ -1295,32 +1587,39 @@ function WeatherData({ onNavigate }) {
                             </div>
 
 
-                            <div className="hourly-forecast">
+                            <div className="hourly-forecast-container">
 
-                                {hourlyForecast.map(
-                                    (item) => (
+                                <div className="hourly-forecast-track">
 
-                                        <div
-                                            className="forecast-item"
-                                            key={item.time}
-                                        >
+                                    {activeHourlyForecast.map(
+                                        (item, idx) => {
+                                            const isNow = item.time === "Now";
+                                            return (
+                                                <div
+                                                    className={`forecast-item ${isNow ? "is-now" : ""}`}
+                                                    key={`${item.time}-${idx}`}
+                                                >
 
-                                            <span className="forecast-time">
-                                                {item.time}
-                                            </span>
+                                                    <span className="forecast-time">
+                                                        {item.time}
+                                                    </span>
 
-                                            <ForecastIcon
-                                                type={item.type}
-                                            />
+                                                    <div className="forecast-icon-box">
+                                                        <ForecastIcon
+                                                            type={item.type}
+                                                        />
+                                                    </div>
 
-                                            <strong>
-                                                {item.temp}
-                                            </strong>
+                                                    <strong className="forecast-temp">
+                                                        {item.temp}
+                                                    </strong>
 
-                                        </div>
+                                                </div>
+                                            );
+                                        }
+                                    )}
 
-                                    )
-                                )}
+                                </div>
 
                             </div>
 
@@ -1342,9 +1641,15 @@ function WeatherData({ onNavigate }) {
 
                             <div className="weather-card-header">
 
-                                <h2>
-                                    Data Sources Status
-                                </h2>
+                                <div className="weather-card-title-wrap">
+                                    <h2>
+                                        Data Sources Status
+                                    </h2>
+                                </div>
+
+                                <span className="sources-count-badge">
+                                    {dynamicDataSources.length} Connected
+                                </span>
 
                             </div>
 
@@ -1388,7 +1693,7 @@ function WeatherData({ onNavigate }) {
 
                                     <tbody>
 
-                                        {dataSources.map(
+                                        {dynamicDataSources.map(
                                             (item) => (
 
                                                 <tr
@@ -1402,34 +1707,34 @@ function WeatherData({ onNavigate }) {
                                                             <span className="source-icon">
 
                                                                 <Database
-                                                                    size={13}
+                                                                    size={14}
                                                                 />
 
                                                             </span>
 
-                                                            {item.source}
+                                                            <span>{item.source}</span>
 
                                                         </div>
 
                                                     </td>
 
                                                     <td>
-                                                        {item.type}
+                                                        <span className="source-type-pill">{item.type}</span>
                                                     </td>
 
                                                     <td>
-                                                        {item.coverage}
+                                                        <span className="source-coverage-text">{item.coverage}</span>
                                                     </td>
 
                                                     <td>
-                                                        {item.resolution}
+                                                        <span className="source-resolution-tag">{item.resolution}</span>
                                                     </td>
 
                                                     <td>
 
-                                                        <span className="live-status">
+                                                        <span className="live-status-pill">
 
-                                                            <i></i>
+                                                            <i className="live-dot-pulse"></i>
 
                                                             {item.status}
 
@@ -1437,7 +1742,7 @@ function WeatherData({ onNavigate }) {
 
                                                     </td>
 
-                                                    <td>
+                                                    <td className="source-updated">
                                                         {item.updated}
                                                     </td>
 

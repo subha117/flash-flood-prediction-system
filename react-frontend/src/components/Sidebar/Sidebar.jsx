@@ -60,7 +60,7 @@ function Sidebar({
   const baseMenuItems = [
     {
       id: "dashboard",
-      label: "User Dashboard",
+      label: "Dashboard",
       icon: LayoutDashboard,
     },
     {
@@ -285,37 +285,37 @@ function Sidebar({
 
         <p>
           <MapPin size={15} />
-          {location.name}, {location.state}
+          {location?.name && location.name !== "Selected Location" ? `${location.name}, ${location.state || ""}` : "Tehri, Uttarakhand"}
         </p>
 
         <p className="coordinates">
-          {location.latitude.toFixed(4)}° N, {location.longitude.toFixed(4)}° E
+          {location?.latitude ? `${location.latitude.toFixed(4)}° N, ${location.longitude.toFixed(4)}° E` : "30.3720° N, 78.4920° E"}
         </p>
 
-        <button type="button">Change Location</button>
+        <button type="button" onClick={() => onNavigate && onNavigate("locations")}>Change Location</button>
       </div>
 
-      {/* System Status */}
-      <div className="sidebar-status">
-        <h4>System Status</h4>
-
-        <p>
-          <span className={`status-dot ${apiOnline ? '' : 'offline'}`} style={{ backgroundColor: apiOnline ? 'var(--success-color, #10b981)' : '#ef4444' }}></span>
-          {apiOnline ? "All Systems Operational" : "API Offline"}
-        </p>
-
-        <small className="sidebar-status-updated">
-          Last Updated
-        </small>
-
-        <span className="sidebar-status-time">
-          {lastUpdate ? lastUpdate.toLocaleString() : "Unknown"}
-        </span>
-
-        <p className="sidebar-live-status">
-          <span className="status-dot"></span>
-          Live Data Active
-        </p>
+      {/* Risk Level Guide */}
+      <div className="sidebar-risk-guide">
+        <h4>Risk Level Guide</h4>
+        <div className="sidebar-guide-items">
+          <div className="guide-item">
+            <span className="dot dot-low"></span>
+            <span>Low (0 - 30%)</span>
+          </div>
+          <div className="guide-item">
+            <span className="dot dot-moderate"></span>
+            <span>Moderate (30 - 60%)</span>
+          </div>
+          <div className="guide-item">
+            <span className="dot dot-high"></span>
+            <span>High (60 - 80%)</span>
+          </div>
+          <div className="guide-item">
+            <span className="dot dot-critical"></span>
+            <span>Critical (80 - 100%)</span>
+          </div>
+        </div>
       </div>
 
       {/* HydroCopilot Assistant */}

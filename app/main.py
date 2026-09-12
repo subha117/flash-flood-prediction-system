@@ -143,6 +143,7 @@ class LegacyPredictRequest(BaseModel):
     rainfall_change: float
     
 @app.post("/predict")
+@app.post("/api/predict")
 def predict_legacy(req: LegacyPredictRequest):
     return ml_service.predict(req.dict())
 
@@ -203,3 +204,9 @@ def seed_dummy_predictions(db: Session = Depends(get_db)):
         
     db.commit()
     return {"message": "Seeded 100 predictions"}
+
+import os
+from fastapi.staticfiles import StaticFiles
+vanilla_frontend_dir = os.path.join(os.path.dirname(__file__), "../frontend")
+if os.path.exists(vanilla_frontend_dir):
+    app.mount("/static-ui", StaticFiles(directory=vanilla_frontend_dir, html=True), name="static-ui")

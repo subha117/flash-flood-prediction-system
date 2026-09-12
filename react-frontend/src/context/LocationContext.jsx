@@ -27,6 +27,8 @@ export const LocationProvider = ({ children }) => {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [apiOnline, setApiOnline] = useState(true);
 
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+
   const checkHealth = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/health`);
@@ -50,7 +52,7 @@ export const LocationProvider = ({ children }) => {
     } catch (e) { console.error("History fetch failed:", e); }
   }, []);
 
-  const updateLocation = useCallback(async (lat, lng) => {
+  const updateLocation = useCallback(async (lat, lng, source = "user") => {
     setLoading(true);
     setError(null);
 
@@ -70,10 +72,15 @@ export const LocationProvider = ({ children }) => {
         }
       } catch (e) { console.error("Geocode failed:", e); }
 
-      setLocation({
+      const updatedLoc = {
         name: locName, city, district, state, country,
-        latitude: lat, longitude: lng, source: "user"
-      });
+        latitude: lat, longitude: lng, source
+      };
+      setLocation(updatedLoc);
+
+      try {
+        localStorage.setItem("app_user_location", JSON.stringify({ lat, lng, source }));
+      } catch (e) {}
 
       // 2. Features (weather + terrain merged)
       let featData = {};
@@ -145,18 +152,78 @@ export const LocationProvider = ({ children }) => {
     }
   }, [fetchAlerts, fetchPredictionHistory]);
 
+  const useCurrentLocation = useCallback(async () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    setIsDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          await updateLocation(pos.coords.latitude, pos.coords.longitude, "gps");
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (err) => {
+        setIsDetectingLocation(false);
+        if (err.code === 1) {
+          alert("Location permission was denied. Please allow location permission in your browser to load your real-time current location.");
+        } else if (err.code === 3) {
+          alert("Location request timed out. Please try again.");
+        } else {
+          alert("Unable to determine your current location. Please verify your device location settings.");
+        }
+      },
+      { timeout: 10000, enableHighAccuracy: true, maximumAge: 60000 }
+    );
+  }, [updateLocation]);
+
   const refreshData = useCallback(() => {
-    return updateLocation(location.latitude, location.longitude);
-  }, [location.latitude, location.longitude, updateLocation]);
+    return updateLocation(location.latitude, location.longitude, location.source || "user");
+  }, [location.latitude, location.longitude, location.source, updateLocation]);
 
   useEffect(() => {
     checkHealth();
-    updateLocation(22.5726, 88.3639);
+
+    // Check if user previously saved a location
+    const saved = localStorage.getItem("app_user_location");
+    if (saved) {
+      try {
+        const { lat, lng, source } = JSON.parse(saved);
+        if (lat && lng) {
+          updateLocation(lat, lng, source || "user");
+          return;
+        }
+      } catch (e) {}
+    }
+
+    // Try auto-detecting current user location on first load
+    if (navigator.geolocation) {
+      setIsDetectingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          updateLocation(pos.coords.latitude, pos.coords.longitude, "gps").finally(() => {
+            setIsDetectingLocation(false);
+          });
+        },
+        (err) => {
+          console.warn("Could not auto-detect location on startup, using Dehradun, Uttarakhand default:", err);
+          setIsDetectingLocation(false);
+          updateLocation(30.3165, 78.0322, "default");
+        },
+        { timeout: 8000, enableHighAccuracy: true }
+      );
+    } else {
+      updateLocation(30.3165, 78.0322, "default");
+    }
   }, []);
 
   const value = {
     location, weather, terrain, prediction, history, alerts,
     predictionHistory, loading, error, lastUpdate, apiOnline,
+    isDetectingLocation, useCurrentLocation,
     updateLocation, refreshData, checkHealth
   };
 

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { LocationContext } from "../../../context/LocationContext";
 
 import {
   Search,
@@ -83,147 +84,193 @@ const createMarkerIcon = (riskLevel) => {
 const locationData = [
   {
     id: 1,
-    name: "Selected Location",
-    state: "Selected Region",
-    lat: 22.5726,
-    lng: 88.3639,
-    elevation: 1520,
-    risk: "HIGH",
-    probability: 82,
-    updated: "30 Aug 2026, 10:30 AM",
+    name: "Bengaluru",
+    state: "Karnataka",
+    lat: 12.9716,
+    lng: 77.5946,
+    elevation: 920,
+    risk: "LOW",
+    probability: 14,
+    updated: "Live ML Model",
   },
-
   {
     id: 2,
+    name: "Mangaluru",
+    state: "Karnataka",
+    lat: 12.9141,
+    lng: 74.8560,
+    elevation: 22,
+    risk: "MODERATE",
+    probability: 45,
+    updated: "Live ML Model",
+  },
+  {
+    id: 3,
+    name: "Coorg (Madikeri)",
+    state: "Karnataka",
+    lat: 12.4244,
+    lng: 75.7382,
+    elevation: 1150,
+    risk: "HIGH",
+    probability: 68,
+    updated: "Live ML Model",
+  },
+  {
+    id: 4,
     name: "Rudraprayag",
-    state: "Selected Region",
+    state: "Uttarakhand",
     lat: 30.2830,
     lng: 79.0670,
     elevation: 895,
     risk: "HIGH",
     probability: 78,
-    updated: "30 Aug 2026, 10:28 AM",
+    updated: "Live ML Model",
   },
-
   {
-    id: 3,
+    id: 5,
     name: "Chamoli",
-    state: "Selected Region",
+    state: "Uttarakhand",
     lat: 30.4150,
     lng: 79.6030,
     elevation: 1780,
     risk: "HIGH",
     probability: 75,
-    updated: "30 Aug 2026, 10:25 AM",
+    updated: "Live ML Model",
   },
-
   {
-    id: 4,
+    id: 6,
     name: "Uttarkashi",
-    state: "Selected Region",
+    state: "Uttarakhand",
     lat: 30.7260,
     lng: 78.4360,
     elevation: 1158,
     risk: "MODERATE",
     probability: 58,
-    updated: "30 Aug 2026, 10:20 AM",
+    updated: "Live ML Model",
   },
-
   {
-    id: 5,
+    id: 7,
     name: "Pauri",
-    state: "Selected Region",
+    state: "Uttarakhand",
     lat: 30.1390,
     lng: 78.8020,
     elevation: 1050,
     risk: "MODERATE",
     probability: 52,
-    updated: "30 Aug 2026, 10:15 AM",
+    updated: "Live ML Model",
   },
-
   {
-    id: 6,
-    name: "Pithoragarh",
-    state: "Selected Region",
-    lat: 29.5850,
-    lng: 80.2190,
-    elevation: 1640,
-    risk: "LOW",
-    probability: 28,
-    updated: "30 Aug 2026, 10:10 AM",
-  },
-
-  {
-    id: 7,
+    id: 8,
     name: "Haridwar",
-    state: "Selected Region",
+    state: "Uttarakhand",
     lat: 29.9450,
     lng: 77.9500,
     elevation: 314,
     risk: "LOW",
     probability: 18,
-    updated: "30 Aug 2026, 10:05 AM",
+    updated: "Live ML Model",
   },
-
   {
-    id: 8,
+    id: 9,
     name: "Nainital",
-    state: "Selected Region",
+    state: "Uttarakhand",
     lat: 29.3800,
     lng: 79.4630,
     elevation: 2084,
     risk: "LOW",
     probability: 22,
-    updated: "30 Aug 2026, 10:02 AM",
+    updated: "Live ML Model",
+  },
+  {
+    id: 10,
+    name: "Kolkata",
+    state: "West Bengal",
+    lat: 22.5726,
+    lng: 88.3639,
+    elevation: 9,
+    risk: "LOW",
+    probability: 12,
+    updated: "Live ML Model",
+  },
+  {
+    id: 11,
+    name: "Darjeeling",
+    state: "West Bengal",
+    lat: 27.0410,
+    lng: 88.2663,
+    elevation: 2042,
+    risk: "HIGH",
+    probability: 65,
+    updated: "Live ML Model",
+  },
+  {
+    id: 12,
+    name: "Mumbai",
+    state: "Maharashtra",
+    lat: 19.0760,
+    lng: 72.8777,
+    elevation: 14,
+    risk: "MODERATE",
+    probability: 48,
+    updated: "Live ML Model",
+  },
+  {
+    id: 13,
+    name: "New Delhi",
+    state: "Delhi",
+    lat: 28.6139,
+    lng: 77.2090,
+    elevation: 216,
+    risk: "LOW",
+    probability: 15,
+    updated: "Live ML Model",
   },
 ];
 
 
 /* =========================================================
-   INDIAN STATES + UNION TERRITORIES
+   INDIAN DISTRICTS & STATES
 ========================================================= */
 
-const states = [
+const districts = [
   "All States",
-
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
+  "Chamoli",
+  "Rudraprayag",
+  "Uttarkashi",
+  "Pauri",
+  "Tehri",
+  "Dehradun",
+  "Haridwar",
+  "Nainital",
+  "Pithoragarh",
+  "Almora",
+  "Bageshwar",
+  "Champawat",
+  "Udham Singh Nagar",
   "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Selected Region",
   "West Bengal",
-
-  "Andaman and Nicobar Islands",
-  "Chandigarh",
-  "Dadra and Nagar Haveli and Daman and Diu",
+  "Uttarakhand",
   "Delhi",
+  "Maharashtra",
+  "Tamil Nadu",
+  "Kerala",
+  "Gujarat",
+  "Rajasthan",
+  "Uttar Pradesh",
+  "Bihar",
+  "Punjab",
+  "Haryana",
+  "Madhya Pradesh",
+  "Andhra Pradesh",
+  "Telangana",
+  "Odisha",
+  "Assam",
+  "Himachal Pradesh",
   "Jammu and Kashmir",
-  "Ladakh",
-  "Lakshadweep",
-  "Puducherry",
+  "Goa",
 ];
+
+const states = districts;
 
 
 /* =========================================================
@@ -254,6 +301,7 @@ function MapController({ selectedLocation }) {
 ========================================================= */
 
 function Locations({ onNavigate }) {
+  const locationCtx = useContext(LocationContext);
   const [locations, setLocations] = useState(locationData);
   const [loading, setLoading] = useState(false);
 
@@ -305,11 +353,14 @@ function Locations({ onNavigate }) {
     loadRealData();
   }, []);
 
+  const [district, setDistrict] = useState("All States");
   const [state, setState] = useState("All States");
   const [riskLevel, setRiskLevel] = useState("All Levels");
+  const [statusFilter, setStatusFilter] = useState("All Status");
 
   const [search, setSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const [selectedLocation, setSelectedLocation] = useState(locations[0]);
 
@@ -333,20 +384,29 @@ function Locations({ onNavigate }) {
      SEARCH SUGGESTIONS
   ======================================================= */
 
-  const stateSuggestions = useMemo(() => {
+  const locationSuggestions = useMemo(() => {
     const value = search.trim().toLowerCase();
 
     if (!value) {
       return [];
     }
 
-    return states
-      .filter((item) => item !== "All States")
+    const pool = Array.from(
+      new Set([
+        ...districts.filter((d) => d !== "All Districts" && d !== "All States"),
+        ...locations.map((l) => l.name),
+        ...locations.map((l) => l.state),
+      ])
+    );
+
+    return pool
       .filter((item) =>
-        item.toLowerCase().startsWith(value)
+        item.toLowerCase().includes(value)
       )
       .slice(0, 6);
-  }, [search]);
+  }, [search, locations]);
+
+  const stateSuggestions = locationSuggestions;
 
 
   /* =======================================================
@@ -356,36 +416,39 @@ function Locations({ onNavigate }) {
   const filteredLocations = useMemo(() => {
     return locations.filter((item) => {
 
-      const stateMatch =
-        state === "All States" ||
-        item.state === state;
+      const districtMatch =
+        district === "All Districts" ||
+        district === "All States" ||
+        item.state.toLowerCase() === district.toLowerCase() ||
+        item.name.toLowerCase() === district.toLowerCase();
 
       const riskMatch =
         riskLevel === "All Levels" ||
         item.risk === riskLevel;
 
-      /*
-        Search ONLY by STATE
-      */
+      const statusMatch =
+        statusFilter === "All Status" ||
+        (statusFilter === "High Risk" && (item.risk === "HIGH" || item.risk === "CRITICAL")) ||
+        (statusFilter === "Normal" && item.risk === "LOW") ||
+        (statusFilter === "Active" && item.risk !== "CRITICAL");
 
       const searchMatch =
         appliedSearch === "" ||
-        item.state
-          .toLowerCase()
-          .startsWith(
-            appliedSearch.toLowerCase()
-          );
+        item.name.toLowerCase().includes(appliedSearch.toLowerCase()) ||
+        item.state.toLowerCase().includes(appliedSearch.toLowerCase());
 
       return (
-        stateMatch &&
+        districtMatch &&
         riskMatch &&
+        statusMatch &&
         searchMatch
       );
     });
   }, [
     locations,
-    state,
+    district,
     riskLevel,
+    statusFilter,
     appliedSearch,
   ]);
 
@@ -422,6 +485,7 @@ function Locations({ onNavigate }) {
 
   const handleApplyFilters = () => {
     setAppliedSearch(search.trim());
+    setShowSuggestions(false);
     setCurrentPage(1);
   };
 
@@ -430,28 +494,26 @@ function Locations({ onNavigate }) {
      SELECT SUGGESTION
   ======================================================= */
 
-  const handleSelectState = (selectedState) => {
-    setSearch(selectedState);
-    setAppliedSearch(selectedState);
+  const handleSelectState = (selectedItem) => {
+    setSearch(selectedItem);
+    setAppliedSearch(selectedItem);
+    setShowSuggestions(false);
     setCurrentPage(1);
 
-    /*
-      Automatically set the dropdown also.
-    */
-
-    setState(selectedState);
-
-    /*
-      Find first location from selected state
-      and move the map there when available.
-    */
+    setDistrict(selectedItem);
+    setState(selectedItem);
 
     const firstLocation = locations.find(
-      (item) => item.state === selectedState
+      (item) =>
+        item.state.toLowerCase() === selectedItem.toLowerCase() ||
+        item.name.toLowerCase() === selectedItem.toLowerCase()
     );
 
     if (firstLocation) {
       setSelectedLocation(firstLocation);
+      if (locationCtx?.updateLocation) {
+        locationCtx.updateLocation(firstLocation.lat, firstLocation.lng);
+      }
     }
   };
 
@@ -461,10 +523,13 @@ function Locations({ onNavigate }) {
   ======================================================= */
 
   const handleClearFilters = () => {
+    setDistrict("All States");
     setState("All States");
     setRiskLevel("All Levels");
+    setStatusFilter("All Status");
     setSearch("");
     setAppliedSearch("");
+    setShowSuggestions(false);
     setCurrentPage(1);
 
     setSelectedLocation(
@@ -540,7 +605,7 @@ function Locations({ onNavigate }) {
             <div className="location-stat-card">
 
               <div className="stat-icon blue">
-                <MapPin size={29} />
+                <MapPin size={21} />
               </div>
 
               <div className="stat-content">
@@ -567,7 +632,7 @@ function Locations({ onNavigate }) {
             <div className="location-stat-card">
 
               <div className="stat-icon green">
-                <ShieldCheck size={29} />
+                <ShieldCheck size={21} />
               </div>
 
               <div className="stat-content">
@@ -594,7 +659,7 @@ function Locations({ onNavigate }) {
             <div className="location-stat-card">
 
               <div className="stat-icon orange">
-                <AlertTriangle size={29} />
+                <AlertTriangle size={21} />
               </div>
 
               <div className="stat-content">
@@ -621,7 +686,7 @@ function Locations({ onNavigate }) {
             <div className="location-stat-card">
 
               <div className="stat-icon purple">
-                <RadioTower size={29} />
+                <RadioTower size={21} />
               </div>
 
               <div className="stat-content">
@@ -833,63 +898,40 @@ function Locations({ onNavigate }) {
               </div>
 
 
-              {/* STATE */}
+              {/* DISTRICT */}
 
               <div className="filter-field">
 
-                <label>
-                  State
+                <label className="filter-label">
+                  States
                 </label>
 
                 <select
-                  value={state}
+                  value={district}
                   onChange={(e) => {
-
-                    const selectedState =
-                      e.target.value;
-
-                    setState(selectedState);
-                    setSearch(
-                      selectedState === "All States"
-                        ? ""
-                        : selectedState
-                    );
-
-                    setAppliedSearch(
-                      selectedState === "All States"
-                        ? ""
-                        : selectedState
-                    );
-
+                    const selected = e.target.value;
+                    setDistrict(selected);
+                    setState(selected);
                     setCurrentPage(1);
 
-                    const firstLocation =
-                      locations.find(
-                        (item) =>
-                          item.state ===
-                          selectedState
-                      );
-
-                    if (firstLocation) {
-                      setSelectedLocation(
-                        firstLocation
-                      );
+                    const matched = locations.find(
+                      (item) =>
+                        item.state.toLowerCase() === selected.toLowerCase() ||
+                        item.name.toLowerCase() === selected.toLowerCase()
+                    );
+                    if (matched) {
+                      setSelectedLocation(matched);
+                      if (locationCtx?.updateLocation) {
+                        locationCtx.updateLocation(matched.lat, matched.lng);
+                      }
                     }
-
                   }}
                 >
-
-                  {states.map((item) => (
-
-                    <option
-                      key={item}
-                      value={item}
-                    >
+                  {districts.map((item) => (
+                    <option key={item} value={item}>
                       {item}
                     </option>
-
                   ))}
-
                 </select>
 
               </div>
@@ -899,74 +941,78 @@ function Locations({ onNavigate }) {
 
               <div className="filter-field">
 
-                <label>
+                <label className="filter-label">
                   Risk Level
                 </label>
 
                 <select
                   value={riskLevel}
                   onChange={(e) => {
-                    setRiskLevel(
-                      e.target.value
-                    );
-
+                    setRiskLevel(e.target.value);
                     setCurrentPage(1);
                   }}
                 >
-
-                  <option value="All Levels">
-                    All Levels
-                  </option>
-
-                  <option value="LOW">
-                    Low
-                  </option>
-
-                  <option value="MODERATE">
-                    Moderate
-                  </option>
-
-                  <option value="HIGH">
-                    High
-                  </option>
-
-                  <option value="CRITICAL">
-                    Critical
-                  </option>
-
+                  <option value="All Levels">All Levels</option>
+                  <option value="LOW">Low</option>
+                  <option value="MODERATE">Moderate</option>
+                  <option value="HIGH">High</option>
+                  <option value="CRITICAL">Critical</option>
                 </select>
 
               </div>
 
 
-              {/* SEARCH STATE */}
+              {/* STATUS */}
+
+              <div className="filter-field">
+
+                <label className="filter-label">
+                  Status
+                </label>
+
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="All Status">All Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Normal">Normal</option>
+                  <option value="High Risk">High Risk</option>
+                </select>
+
+              </div>
+
+
+              {/* SEARCH */}
 
               <div className="filter-field state-search-field">
 
-                <label>
-                  Search State
+                <label className="filter-label">
+                  Search
                 </label>
-
 
                 <div className="filter-search">
 
                   <input
                     type="text"
-                    placeholder="Search state name..."
+                    placeholder="Search location name..."
                     value={search}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => {
+                      setTimeout(() => setShowSuggestions(false), 250);
+                    }}
                     onChange={(e) => {
-
-                      setSearch(
-                        e.target.value
-                      );
-
+                      setSearch(e.target.value);
+                      setShowSuggestions(true);
                     }}
                     onKeyDown={(e) => {
-
                       if (e.key === "Enter") {
+                        setShowSuggestions(false);
                         handleApplyFilters();
                       }
-
                     }}
                   />
 
@@ -975,35 +1021,32 @@ function Locations({ onNavigate }) {
                 </div>
 
 
-                {/* STATE SUGGESTIONS */}
+                {/* SUGGESTIONS */}
 
-                {search.trim() !== "" &&
+                {showSuggestions && search.trim() !== "" &&
                   stateSuggestions.length > 0 && (
 
                     <div className="state-suggestions">
 
-                      {stateSuggestions.map(
-                        (item) => (
-
-                          <button
-                            key={item}
-                            type="button"
-                            className="state-suggestion-item"
-                            onClick={() =>
-                              handleSelectState(item)
-                            }
-                          >
-
-                            <MapPin size={13} />
-
-                            <span>
-                              {item}
-                            </span>
-
-                          </button>
-
-                        )
-                      )}
+                      {stateSuggestions.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          className="state-suggestion-item"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSelectState(item);
+                          }}
+                          onTouchStart={(e) => {
+                            e.preventDefault();
+                            handleSelectState(item);
+                          }}
+                          onClick={() => handleSelectState(item)}
+                        >
+                          <MapPin size={14} />
+                          <span>{item}</span>
+                        </button>
+                      ))}
 
                     </div>
 
@@ -1202,6 +1245,10 @@ function Locations({ onNavigate }) {
                                   setSelectedLocation(
                                     item
                                   );
+
+                                  if (locationCtx?.updateLocation) {
+                                    locationCtx.updateLocation(item.lat, item.lng);
+                                  }
 
                                   window.scrollTo({
                                     top: 0,
