@@ -6,6 +6,8 @@ import { MapContainer, TileLayer, Marker, useMapEvents, Tooltip } from "react-le
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { LocationContext } from "../../../context/LocationContext";
+import { AuthContext } from "../../../context/AuthContext";
+import { convertUnits, formatValueOnly, getUnitSymbol } from "../../../utils/units";
 import "./Dashboard.css";
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -60,6 +62,7 @@ function AlertMarker({ alert, updateLocation }) {
 
 function Dashboard({ onNavigate }) {
   const ctx = useContext(LocationContext);
+  const { settings } = useContext(AuthContext);
   const { location, weather, terrain, prediction, history, alerts, predictionHistory,
     loading, error, lastUpdate, apiOnline, updateLocation, refreshData } = ctx;
 
@@ -164,7 +167,7 @@ function Dashboard({ onNavigate }) {
                   <div className="stat-icon blue"><CloudRain size={27} /></div>
                   <div className="stat-info">
                     <h4>RAINFALL (24H)</h4>
-                    <strong className="blue-text">{fmt(weather?.rain_24h, 1)}<small> mm</small></strong>
+                    <strong className="blue-text">{formatValueOnly(weather?.rain_24h, "rainfall", settings)}<small> {getUnitSymbol("rainfall", settings)}</small></strong>
                     <span className="increase">{trend}</span>
                     {weather?.data_source && <span style={{ fontSize: "0.7rem", background: weather.data_source === "LIVE" ? "#dcfce7" : "#fef3c7", padding: "2px 6px", borderRadius: "4px", marginTop: "4px", display: "inline-block" }}>{weather.data_source}</span>}
                   </div>
@@ -178,7 +181,7 @@ function Dashboard({ onNavigate }) {
                     <strong style={{ color: terrainAvailable ? "#16a34a" : "#dc2626" }}>
                       {terrainAvailable ? "AVAILABLE" : "UNAVAILABLE"}
                     </strong>
-                    <span>{terrainAvailable ? `Elev: ${fmt(terrain.elevation_m, 1)}m, Slope: ${fmt(terrain.slope_degree, 1)}°` : "Outside DEM coverage"}</span>
+                    <span>{terrainAvailable ? `Elev: ${formatValueOnly(terrain.elevation_m, "elevation", settings)}${getUnitSymbol("elevation", settings)}, Slope: ${fmt(terrain.slope_degree, 1)}°` : "Outside DEM coverage"}</span>
                     {terrain?.source && <span style={{ fontSize: "0.7rem", background: "#e2e8f0", padding: "2px 6px", borderRadius: "4px", marginTop: "4px", display: "inline-block" }}>{terrain.source}</span>}
                   </div>
                 </div>
@@ -285,7 +288,7 @@ function Dashboard({ onNavigate }) {
                                 <div style={{ position: "relative" }}>
                                   <div style={{ width: "8px", height: "8px", background: "#fff", border: "2px solid #2563eb", borderRadius: "50%", boxShadow: "0 0 0 2px rgba(255,255,255,0.5)" }}></div>
                                   <div style={{ position: "absolute", bottom: "100%", left: "50%", transform: "translate(-50%, -4px)", paddingBottom: "2px", fontSize: "11px", fontWeight: "600", color: "#334155", whiteSpace: "nowrap" }}>
-                                    {fmt(h.rainfall, 1)}mm
+                                    {formatValueOnly(h.rainfall, "rainfall", settings)}{getUnitSymbol("rainfall", settings)}
                                   </div>
                                 </div>
                               </div>
@@ -316,10 +319,10 @@ function Dashboard({ onNavigate }) {
                 <div className="dashboard-panel">
                   <div className="panel-header"><h2>Current Weather</h2></div>
                   <div style={{ padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><Thermometer size={18} color="#dc2626" /><div><div style={{ fontSize: "0.75rem", color: "#64748b" }}>Temperature</div><strong>{fmt(weather?.temperature, 1)}°C</strong></div></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><Thermometer size={18} color="#dc2626" /><div><div style={{ fontSize: "0.75rem", color: "#64748b" }}>Temperature</div><strong>{convertUnits(weather?.temperature, "temperature", settings)}</strong></div></div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><Droplets size={18} color="#2563eb" /><div><div style={{ fontSize: "0.75rem", color: "#64748b" }}>Humidity</div><strong>{fmt(weather?.humidity, 0)}%</strong></div></div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><Wind size={18} color="#64748b" /><div><div style={{ fontSize: "0.75rem", color: "#64748b" }}>Wind Speed</div><strong>{fmt(weather?.wind_speed, 1)} km/h</strong></div></div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><CloudRain size={18} color="#0ea5e9" /><div><div style={{ fontSize: "0.75rem", color: "#64748b" }}>Current Rain</div><strong>{fmt(weather?.rainfall_mm_hr, 2)} mm/hr</strong></div></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><Wind size={18} color="#64748b" /><div><div style={{ fontSize: "0.75rem", color: "#64748b" }}>Wind Speed</div><strong>{convertUnits(weather?.wind_speed, "wind_speed", settings)}</strong></div></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><CloudRain size={18} color="#0ea5e9" /><div><div style={{ fontSize: "0.75rem", color: "#64748b" }}>Current Rain</div><strong>{convertUnits(weather?.rainfall_mm_hr, "rainfall", settings)}/hr</strong></div></div>
                   </div>
                 </div>
 
