@@ -24,13 +24,21 @@ const TAB_MAP = {
 const tabs = Object.values(TAB_MAP);
 
 // ─── Profile ────────────────────────────────────────────────────────────────
-const ProfileTab = ({ user, token, onUserUpdate }) => {
+const ProfileTab = ({ user, token, setUser }) => {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [msg, setMsg] = useState({ text: '', ok: true });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setName(user?.name || '');
+    setEmail(user?.email || '');
+  }, [user]);
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setMsg({ text: '', ok: true });
     try {
       const res = await fetch(`${API}/auth/profile`, {
         method: 'PUT',
@@ -38,143 +46,189 @@ const ProfileTab = ({ user, token, onUserUpdate }) => {
         body: JSON.stringify({ name, email }),
       });
       const data = await res.json();
-      if (res.ok) { setMsg({ text: 'Profile updated!', ok: true }); onUserUpdate?.(data); }
-      else setMsg({ text: data.detail || 'Failed to update.', ok: false });
-    } catch { setMsg({ text: 'Network error.', ok: false }); }
+      if (res.ok) { 
+        setMsg({ text: 'Profile updated successfully!', ok: true }); 
+        setUser(data);
+      } else {
+        setMsg({ text: data.detail || 'Failed to update profile.', ok: false });
+      }
+    } catch { setMsg({ text: 'Network error. Could not connect to server.', ok: false }); }
+    finally { setSaving(false); }
   };
 
   return (
     <div className="tab-pane">
       <h3>Profile Information</h3>
+      <p className="hint" style={{marginBottom: '16px'}}>Update your account details below.</p>
       {msg.text && <div className={msg.ok ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
       <form onSubmit={handleSave}>
         <div className="form-group"><label>Full Name</label>
-          <input type="text" value={name} onChange={e => setName(e.target.value)} required />
+          <input type="text" value={name} onChange={e => setName(e.target.value)} required disabled={saving} />
         </div>
         <div className="form-group"><label>Email Address</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} required disabled={saving} />
         </div>
         <div className="form-group"><label>Role</label>
-          <input type="text" value={user?.role || ''} disabled className="input-disabled" />
+          <input type="text" value={user?.role?.toUpperCase() || ''} disabled className="input-disabled" />
+          <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>Roles are assigned by administrators and cannot be changed here.</span>
         </div>
-        <button type="submit" className="btn-primary">Save Changes</button>
+        <button type="submit" className="btn-primary" disabled={saving}>
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
       </form>
     </div>
   );
 };
 
 // ─── Preferences ────────────────────────────────────────────────────────────
-const PreferencesTab = ({ token }) => {
-  const [theme, setTheme] = useState('light');
-  const [units, setUnits] = useState('metric');
-  const [defaultLoc, setDefaultLoc] = useState('Kolkata');
-  const [msg, setMsg] = useState('');
+const PreferencesTab = ({ token, settings, setSettings }) => {
+  const [theme, setTheme] = useState(settings?.theme || 'light');
+  const [defaultLoc, setDefaultLoc] = useState(settings?.default_location || 'Kolkata');
+  const [msg, setMsg] = useState({ text: '', ok: true });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch(`${API}/settings`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(d => {
-        setTheme(d.theme || 'light');
-        setUnits(d.units || 'metric');
-        setDefaultLoc(d.default_location || 'Kolkata');
-      }).catch(() => {});
-  }, [token]);
+    setTheme(settings?.theme || 'light');
+    setDefaultLoc(settings?.default_location || 'Kolkata');
+  }, [settings]);
 
   const handleSave = async () => {
-    const res = await fetch(`${API}/settings`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ theme, units, default_location: defaultLoc }),
-    });
-    setMsg(res.ok ? 'Preferences saved!' : 'Failed to save.');
+    setSaving(true);
+    setMsg({ text: '', ok: true });
+    try {
+      const res = await fetch(`${API}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ theme, default_location: defaultLoc }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSettings(data);
+        setMsg({ text: 'Preferences saved successfully!', ok: true });
+      } else {
+        setMsg({ text: 'Failed to save preferences.', ok: false });
+      }
+    } catch {
+      setMsg({ text: 'Network error.', ok: false });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="tab-pane">
       <h3>Preferences</h3>
-      {msg && <div className="alert-success">{msg}</div>}
+      <p className="hint" style={{marginBottom: '16px'}}>Customize your dashboard appearance and default behavior.</p>
+      {msg.text && <div className={msg.ok ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
       <div className="form-group"><label>Theme</label>
-        <select value={theme} onChange={e => setTheme(e.target.value)}>
+        <select value={theme} onChange={e => setTheme(e.target.value)} disabled={saving}>
           <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-      </div>
-      <div className="form-group"><label>Units</label>
-        <select value={units} onChange={e => setUnits(e.target.value)}>
-          <option value="metric">Metric (mm, °C, m)</option>
-          <option value="imperial">Imperial (in, °F, ft)</option>
+          <option value="dark">Dark (Coming Soon)</option>
         </select>
       </div>
       <div className="form-group"><label>Default Location</label>
-        <input type="text" value={defaultLoc} onChange={e => setDefaultLoc(e.target.value)} />
+        <input type="text" value={defaultLoc} onChange={e => setDefaultLoc(e.target.value)} disabled={saving} placeholder="e.g. Kolkata, India" />
       </div>
-      <button className="btn-primary" onClick={handleSave}>Save Preferences</button>
+      <button className="btn-primary" onClick={handleSave} disabled={saving}>
+        {saving ? 'Saving...' : 'Save Preferences'}
+      </button>
     </div>
   );
 };
 
 // ─── Notifications ───────────────────────────────────────────────────────────
-const NotificationsTab = ({ token }) => {
-  const [enabled, setEnabled] = useState(true);
-  const [msg, setMsg] = useState('');
+const NotificationsTab = ({ token, settings, setSettings }) => {
+  const [enabled, setEnabled] = useState(settings?.notifications_enabled ?? true);
+  const [msg, setMsg] = useState({ text: '', ok: true });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch(`${API}/settings`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(d => setEnabled(d.notifications_enabled ?? true)).catch(() => {});
-  }, [token]);
+    setEnabled(settings?.notifications_enabled ?? true);
+  }, [settings]);
 
   const handleSave = async () => {
-    const res = await fetch(`${API}/settings`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ notifications_enabled: enabled }),
-    });
-    setMsg(res.ok ? 'Notification settings saved!' : 'Failed to save.');
+    setSaving(true);
+    setMsg({ text: '', ok: true });
+    try {
+      const res = await fetch(`${API}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ notifications_enabled: enabled }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSettings(data);
+        setMsg({ text: 'Notification settings saved!', ok: true });
+      } else {
+        setMsg({ text: 'Failed to save notifications.', ok: false });
+      }
+    } catch {
+      setMsg({ text: 'Network error.', ok: false });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="tab-pane">
       <h3>Notification Settings</h3>
-      {msg && <div className="alert-success">{msg}</div>}
+      {msg.text && <div className={msg.ok ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
       <div className="form-group toggle-group">
         <label>Enable Flood Alerts</label>
         <label className="toggle">
-          <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} />
+          <input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)} disabled={saving} />
           <span className="slider"></span>
         </label>
       </div>
       <p className="hint">When enabled, you will receive real-time flood risk alerts for monitored locations.</p>
-      <button className="btn-primary" onClick={handleSave}>Save</button>
+      <button className="btn-primary" onClick={handleSave} disabled={saving}>
+        {saving ? 'Saving...' : 'Save'}
+      </button>
     </div>
   );
 };
 
 // ─── Data & Units ────────────────────────────────────────────────────────────
-const DataUnitsTab = ({ token }) => {
-  const [units, setUnits] = useState('metric');
-  const [msg, setMsg] = useState('');
+const DataUnitsTab = ({ token, settings, setSettings }) => {
+  const [units, setUnits] = useState(settings?.units || 'metric');
+  const [msg, setMsg] = useState({ text: '', ok: true });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch(`${API}/settings`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(d => setUnits(d.units || 'metric')).catch(() => {});
-  }, [token]);
+    setUnits(settings?.units || 'metric');
+  }, [settings]);
 
   const handleSave = async () => {
-    const res = await fetch(`${API}/settings`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ units }),
-    });
-    setMsg(res.ok ? 'Units saved!' : 'Failed to save.');
+    setSaving(true);
+    setMsg({ text: '', ok: true });
+    try {
+      const res = await fetch(`${API}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ units }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSettings(data);
+        setMsg({ text: 'Units saved successfully!', ok: true });
+      } else {
+        setMsg({ text: 'Failed to save units.', ok: false });
+      }
+    } catch {
+      setMsg({ text: 'Network error.', ok: false });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="tab-pane">
       <h3>Data & Units</h3>
-      {msg && <div className="alert-success">{msg}</div>}
+      {msg.text && <div className={msg.ok ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
       <div className="form-group"><label>Measurement System</label>
-        <select value={units} onChange={e => setUnits(e.target.value)}>
+        <select value={units} onChange={e => setUnits(e.target.value)} disabled={saving}>
           <option value="metric">Metric — mm, °C, metres</option>
-          <option value="imperial">Imperial — inches, °F, feet</option>
+          <option value="imperial">Imperial — inches, °F, feet (Coming Soon)</option>
         </select>
       </div>
       <div className="info-box">
@@ -186,7 +240,9 @@ const DataUnitsTab = ({ token }) => {
           <li>🗺 Geocoding: Nominatim</li>
         </ul>
       </div>
-      <button className="btn-primary" onClick={handleSave}>Save</button>
+      <button className="btn-primary" onClick={handleSave} disabled={saving}>
+        {saving ? 'Saving...' : 'Save'}
+      </button>
     </div>
   );
 };
@@ -197,11 +253,16 @@ const SecurityTab = ({ token }) => {
   const [newPwd, setNewPwd] = useState('');
   const [confirm, setConfirm] = useState('');
   const [msg, setMsg] = useState({ text: '', ok: true });
+  const [saving, setSaving] = useState(false);
 
   const handleChange = async (e) => {
     e.preventDefault();
     if (newPwd !== confirm) { setMsg({ text: 'Passwords do not match.', ok: false }); return; }
     if (newPwd.length < 8) { setMsg({ text: 'Password must be at least 8 characters.', ok: false }); return; }
+    
+    setSaving(true);
+    setMsg({ text: '', ok: true });
+    
     try {
       const res = await fetch(`${API}/auth/change-password`, {
         method: 'PUT',
@@ -209,26 +270,37 @@ const SecurityTab = ({ token }) => {
         body: JSON.stringify({ current_password: current, new_password: newPwd }),
       });
       const data = await res.json();
-      if (res.ok) { setMsg({ text: 'Password changed!', ok: true }); setCurrent(''); setNewPwd(''); setConfirm(''); }
-      else setMsg({ text: data.detail || 'Failed to change password.', ok: false });
-    } catch { setMsg({ text: 'Network error.', ok: false }); }
+      if (res.ok) { 
+        setMsg({ text: 'Password changed successfully!', ok: true }); 
+        setCurrent(''); setNewPwd(''); setConfirm(''); 
+      } else {
+        setMsg({ text: data.detail || 'Failed to change password.', ok: false });
+      }
+    } catch { 
+      setMsg({ text: 'Network error. Could not connect to server.', ok: false }); 
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="tab-pane">
       <h3>Security</h3>
+      <p className="hint" style={{marginBottom: '16px'}}>Update your account password securely.</p>
       {msg.text && <div className={msg.ok ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
       <form onSubmit={handleChange}>
         <div className="form-group"><label>Current Password</label>
-          <input type="password" value={current} onChange={e => setCurrent(e.target.value)} required />
+          <input type="password" value={current} onChange={e => setCurrent(e.target.value)} required disabled={saving} />
         </div>
         <div className="form-group"><label>New Password</label>
-          <input type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)} required />
+          <input type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)} required disabled={saving} />
         </div>
         <div className="form-group"><label>Confirm New Password</label>
-          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
+          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required disabled={saving} />
         </div>
-        <button type="submit" className="btn-primary">Change Password</button>
+        <button type="submit" className="btn-primary" disabled={saving}>
+          {saving ? 'Updating...' : 'Change Password'}
+        </button>
       </form>
     </div>
   );
@@ -237,57 +309,90 @@ const SecurityTab = ({ token }) => {
 // ─── Access & Roles ──────────────────────────────────────────────────────────
 const AccessRolesTab = ({ token, user }) => {
   const [users, setUsers] = useState([]);
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg] = useState({ text: '', ok: true });
+  const [loading, setLoading] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     if (user?.role !== 'admin') return;
+    setLoading(true);
     fetch(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json()).then(setUsers).catch(() => {});
+      .then(r => r.json())
+      .then(d => { setUsers(d); setLoading(false); })
+      .catch(() => { setMsg({ text: 'Failed to load users', ok: false }); setLoading(false); });
   }, [token, user]);
 
   const handleRoleChange = async (userId, newRole) => {
-    const res = await fetch(`${API}/auth/users/${userId}/role`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ role: newRole }),
-    });
-    if (res.ok) {
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-      setMsg('Role updated!');
-    } else setMsg('Failed to update role.');
+    setUpdatingId(userId);
+    setMsg({ text: '', ok: true });
+    try {
+      const res = await fetch(`${API}/auth/users/${userId}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ role: newRole }),
+      });
+      if (res.ok) {
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        setMsg({ text: 'Role updated successfully!', ok: true });
+      } else {
+        const data = await res.json();
+        setMsg({ text: data.detail || 'Failed to update role.', ok: false });
+      }
+    } catch {
+      setMsg({ text: 'Network error.', ok: false });
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   if (user?.role !== 'admin') return (
     <div className="tab-pane">
-      <div className="alert-error">⛔ Admin access required for this section.</div>
+      <h3>Access & Roles</h3>
+      <div className="alert-error" style={{marginTop: '16px'}}>
+        ⛔ <strong>Unauthorized:</strong> Administrator access is required to view and manage roles. Your current role is <strong>{user?.role?.toUpperCase()}</strong>.
+      </div>
     </div>
   );
 
   return (
     <div className="tab-pane">
       <h3>Access & Roles</h3>
-      {msg && <div className="alert-success">{msg}</div>}
-      <table className="settings-table">
-        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
-        <tbody>
-          {users.map(u => (
-            <tr key={u.id}>
-              <td>{u.name}</td>
-              <td>{u.email}</td>
-              <td><span className={`badge badge-${u.role}`}>{u.role}</span></td>
-              <td>
-                {u.id !== user?.id && (
-                  <select value={u.role} onChange={e => handleRoleChange(u.id, e.target.value)}>
-                    <option value="user">User</option>
-                    <option value="gov">Gov</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <p className="hint" style={{marginBottom: '16px'}}>Manage user permissions and platform access. Only administrators can perform these actions.</p>
+      {msg.text && <div className={msg.ok ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
+      
+      {loading ? (
+        <div style={{ padding: '20px', color: '#64748b' }}>Loading users...</div>
+      ) : users.length === 0 ? (
+        <div style={{ padding: '20px', color: '#64748b' }}>No users found.</div>
+      ) : (
+        <table className="settings-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u.id}>
+                <td>{u.name}</td>
+                <td>{u.email}</td>
+                <td><span className={`badge badge-${u.role}`}>{u.role?.toUpperCase()}</span></td>
+                <td>
+                  {u.id !== user?.id ? (
+                    <select 
+                      value={u.role} 
+                      onChange={e => handleRoleChange(u.id, e.target.value)}
+                      disabled={updatingId === u.id}
+                    >
+                      <option value="user">User</option>
+                      <option value="gov">Gov</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  ) : (
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Cannot change own role</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
@@ -468,7 +573,7 @@ const AboutTab = () => (
 
 // ─── Main Settings Page ──────────────────────────────────────────────────────
 export default function Settings({ onNavigate, onHome }) {
-  const { user, token } = useContext(AuthContext);
+  const { user, setUser, settings, setSettings, token } = useContext(AuthContext);
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Derive active tab from URL ?tab= param, default to 'Profile'
@@ -486,10 +591,10 @@ export default function Settings({ onNavigate, onHome }) {
 
   const renderTab = () => {
     switch (activeTab) {
-      case 'Profile': return <ProfileTab user={user} token={token} />;
-      case 'Preferences': return <PreferencesTab token={token} />;
-      case 'Notifications': return <NotificationsTab token={token} />;
-      case 'Data & Units': return <DataUnitsTab token={token} />;
+      case 'Profile': return <ProfileTab user={user} setUser={setUser} token={token} />;
+      case 'Preferences': return <PreferencesTab token={token} settings={settings} setSettings={setSettings} />;
+      case 'Notifications': return <NotificationsTab token={token} settings={settings} setSettings={setSettings} />;
+      case 'Data & Units': return <DataUnitsTab token={token} settings={settings} setSettings={setSettings} />;
       case 'Security': return <SecurityTab token={token} />;
       case 'Access & Roles': return <AccessRolesTab token={token} user={user} />;
       case 'API & Integrations': return <APIIntegrationsTab />;

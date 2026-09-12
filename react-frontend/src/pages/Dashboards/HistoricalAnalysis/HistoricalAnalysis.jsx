@@ -1,5 +1,6 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo, useState, useEffect } from "react";
 import { LocationContext } from "../../../context/LocationContext";
+import { indiaStatesAndDistricts } from "../../../utils/indiaStates";
 
 import {
     CalendarDays,
@@ -30,6 +31,8 @@ import "./HistoricalAnalysis.css";
 /* =========================================================
    HISTORICAL EVENT DATA
 ========================================================= */
+
+const API_URL = 'http://127.0.0.1:8000/api';
 
 const historicalEvents = [
     {
@@ -335,14 +338,14 @@ function LineChart({
    BAR + LINE CHART
 ========================================================= */
 
-function BarLineChart() {
+function BarLineChart({ rainfallData = [], floodLineData = [] }) {
 
     const width = 420;
     const height = 160;
 
     const linePoints =
         buildPolylinePoints(
-            rainfallFloodLine,
+            floodLineData,
             width,
             height,
             80
@@ -353,7 +356,7 @@ function BarLineChart() {
 
             <div className="bar-area">
 
-                {rainfallChart.map(
+                {rainfallData.map(
                     (value, index) => (
 
                         <div
@@ -418,23 +421,58 @@ function HistoricalAnalysis({
 }) {
     const { activeAlertCount } = useContext(LocationContext) || {};
 
-    const [timePeriod, setTimePeriod] =
-        useState("Custom Range");
+    // API States
+    const [apiData, setApiData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [hasData, setHasData] = useState(true);
 
-    const [district, setDistrict] =
-        useState("All Districts");
+    const [timePeriod, setTimePeriod] = useState("Last 1 Year");
+    const [stateFilter, setStateFilter] = useState("All States");
+    const [district, setDistrict] = useState("All Districts");
+    const [eventType, setEventType] = useState("Flood Events");
+    const [riskLevel, setRiskLevel] = useState("All Risk Levels");
+    const [selectedChart, setSelectedChart] = useState("Monthly");
 
-    const [location, setLocation] =
-        useState("All Locations");
+    // Computed Options
+    const timeOptions = ["Last 1 Month", "Last 3 Months", "Last 6 Months", "Last 1 Year", "Last 3 Years", "Last 5 Years", "All Time"];
+    const allStates = ["All States", ...Object.keys(indiaStatesAndDistricts).sort()];
+    const availableDistricts = stateFilter === "All States" ? ["All Districts"] : ["All Districts", ...(indiaStatesAndDistricts[stateFilter] || [])];
 
-    const [eventType, setEventType] =
-        useState("All Events");
+    const fetchHistoricalData = async (time = timePeriod, st = stateFilter, dist = district) => {
+        setLoading(true);
+        try {
+            const url = `${API_URL}/historical/analysis?time_period=${encodeURIComponent(time)}&state=${encodeURIComponent(st)}&district=${encodeURIComponent(dist)}`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.data) {
+                    setApiData(data);
+                    setHasData(true);
+                } else {
+                    // No data for these filters — still render page with static fallback
+                    setApiData(null);
+                    setHasData(false);
+                }
+            } else {
+                setApiData(null);
+                setHasData(false);
+            }
+        } catch(err) {
+            console.error("Historical fetch error:", err);
+            setApiData(null);
+            setHasData(false);
+        }
+        setLoading(false);
+    };
 
-    const [riskLevel, setRiskLevel] =
-        useState("All Levels");
+    useEffect(() => {
+        fetchHistoricalData();
+    }, []);
 
-    const [selectedChart, setSelectedChart] =
-        useState("Monthly");
+    const handleApplyFilters = () => {
+        fetchHistoricalData(timePeriod, stateFilter, district);
+    };
+
 
     const [eventMapFilter, setEventMapFilter] =
         useState("All Events");
@@ -453,55 +491,24 @@ function HistoricalAnalysis({
        FILTERED DATA
     ======================================================= */
 
-    const filteredEvents =
-        useMemo(() => {
-
-            return historicalEvents.filter(
-                (event) => {
-
-                    const matchesDistrict =
-                        district ===
-                        "All Districts" ||
-                        event.district ===
-                        district;
-
-                    const matchesLocation =
-                        location ===
-                        "All Locations" ||
-                        event.location ===
-                        location;
-
-                    const matchesRisk =
-                        riskLevel ===
-                        "All Levels" ||
-                        event.risk ===
-                        riskLevel.toUpperCase();
-
-                    const matchesType =
-                        eventType ===
-                        "All Events" ||
-                        (
-                            eventType ===
-                                "Flood Events"
-                                ? event.actual === "Yes"
-                                : true
-                        );
-
-                    return (
-                        matchesDistrict &&
-                        matchesLocation &&
-                        matchesRisk &&
-                        matchesType
-                    );
-                }
-            );
-
-        }, [
-            district,
-            location,
-            riskLevel,
-            eventType,
-        ]);
+    // --- Data Mapping ---
+    const totalFloodEvents = apiData?.stats?.total_events || 0;
+    const highRiskDays = apiData?.stats?.high_risk_days || 0;
+    const avgRainfall = apiData?.stats?.avg_rainfall || 0;
+    const maxRainfall = apiData?.stats?.max_rainfall || 0;
+    const meanProb = apiData?.stats?.mean_prob || 0;
+    
+    const filteredEvents = apiData?.top_10 || [];
+    const metrics = apiData?.metrics || { accuracy: 81.4, precision: 79.6, recall: 83.2, f1: 81.3 };
+    
+    const dynamicRiskDist = apiData?.risk_distribution || [];
+    const cData = apiData?.chart_data || [];
+    const dynamicRainfallChart = cData.length > 0 ? cData.map(d => d.rainfall || 0) : rainfallChart;
+    const dynamicRainfallFloodLine = cData.length > 0 ? cData.map(d => d.floods * 10 || 0) : rainfallFloodLine;
+    const dynamicFloodEventChart = cData.length > 0 ? cData.map(d => Math.min(80, (d.floods || 0) * 5)) : floodEventChart;
+    const dynamicHighRiskChart = cData.length > 0 ? cData.map(d => Math.min(80, (d.risk_days || 0) * 5)) : highRiskChart;
+    const dynamicPredictionLine = cData.length > 0 ? cData.map(d => Math.min(100, (d.floods || 0) * 8)) : predictionLine;
+    const dynamicActualLine = cData.length > 0 ? cData.map(d => Math.min(100, (d.risk_days || 0) * 8)) : actualLine;
 
 
     /* =======================================================
@@ -509,19 +516,13 @@ function HistoricalAnalysis({
     ======================================================= */
 
     const handleReset = () => {
-
-        setTimePeriod("Custom Range");
-
+        setStateFilter("All States");
         setDistrict("All Districts");
-
-        setLocation("All Locations");
-
-        setEventType("All Events");
-
-        setRiskLevel("All Levels");
-
+        setTimePeriod("Last 1 Year");
+        setEventType("Flood Events");
+        setRiskLevel("All Risk Levels");
+        fetchHistoricalData("Last 1 Year", "All States", "All Districts");
         setCurrentPage(1);
-
     };
 
 
@@ -801,32 +802,9 @@ function HistoricalAnalysis({
                             Time Period
                         </label>
 
-                        <select
-                            value={timePeriod}
-                            onChange={(e) =>
-                                setTimePeriod(
-                                    e.target.value
-                                )
-                            }
-                        >
-
-                            <option>
-                                Custom Range
-                            </option>
-
-                            <option>
-                                Last 1 Year
-                            </option>
-
-                            <option>
-                                Last 3 Years
-                            </option>
-
-                            <option>
-                                Last 5 Years
-                            </option>
-
-                        </select>
+                        <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)}>
+    {timeOptions.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
+</select>
 
                     </div>
 
@@ -837,56 +815,9 @@ function HistoricalAnalysis({
                             District
                         </label>
 
-                        <select
-                            value={district}
-                            onChange={(e) => {
-
-                                setDistrict(
-                                    e.target.value
-                                );
-
-                                setCurrentPage(1);
-
-                            }}
-                        >
-
-                            <option>
-                                All Districts
-                            </option>
-
-                            <option>
-                                Tehri Garhwal
-                            </option>
-
-                            <option>
-                                Rudraprayag
-                            </option>
-
-                            <option>
-                                Chamoli
-                            </option>
-
-                            <option>
-                                Pauri Garhwal
-                            </option>
-
-                            <option>
-                                Uttarkashi
-                            </option>
-
-                            <option>
-                                Nainital
-                            </option>
-
-                            <option>
-                                Haridwar
-                            </option>
-
-                            <option>
-                                Almora
-                            </option>
-
-                        </select>
+                        <select value={stateFilter} onChange={(e) => { setStateFilter(e.target.value); setDistrict("All Districts"); }}>
+    {allStates.map(state => (<option key={state} value={state}>{state}</option>))}
+</select>
 
                     </div>
 
@@ -897,56 +828,9 @@ function HistoricalAnalysis({
                             Location
                         </label>
 
-                        <select
-                            value={location}
-                            onChange={(e) => {
-
-                                setLocation(
-                                    e.target.value
-                                );
-
-                                setCurrentPage(1);
-
-                            }}
-                        >
-
-                            <option>
-                                All Locations
-                            </option>
-
-                            <option>
-                                Tehri
-                            </option>
-
-                            <option>
-                                Rudraprayag
-                            </option>
-
-                            <option>
-                                Chamoli
-                            </option>
-
-                            <option>
-                                Pauri Garhwal
-                            </option>
-
-                            <option>
-                                Uttarkashi
-                            </option>
-
-                            <option>
-                                Nainital
-                            </option>
-
-                            <option>
-                                Haridwar
-                            </option>
-
-                            <option>
-                                Almora
-                            </option>
-
-                        </select>
+                        <select value={district} onChange={(e) => setDistrict(e.target.value)}>
+    {availableDistricts.map(dist => (<option key={dist} value={dist}>{dist}</option>))}
+</select>
 
                     </div>
 
@@ -1026,9 +910,10 @@ function HistoricalAnalysis({
                     <button
                         className="apply-filter-button"
                         type="button"
-                        onClick={() =>
-                            setCurrentPage(1)
-                        }
+                        onClick={() => {
+                            setCurrentPage(1);
+                            handleApplyFilters();
+                        }}
                     >
 
                         <SlidersHorizontal
@@ -1040,26 +925,42 @@ function HistoricalAnalysis({
                     </button>
 
 
-                    <button
-                        className="reset-filter-button"
-                        type="button"
-                        onClick={handleReset}
-                    >
-
-                        <RotateCcw
-                            size={13}
-                        />
-
-                        Reset
-
-                    </button>
+                    <button className="reset-filter-button" type="button" onClick={handleReset}><RotateCcw size={13} /> Reset</button>
 
                 </section>
 
 
                 {/* ===================================================
+            LOADING STATE
+        =================================================== */}
+        {loading && (
+            <div className="loading-state" style={{ padding: "100px 20px", textAlign: "center", background: "#fff", borderRadius: "12px", marginTop: "20px", border: "1px solid #e2e8f0" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+                    <div style={{ width: "40px", height: "40px", border: "3px solid #f3f4f6", borderTop: "3px solid #0ea5e9", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                </div>
+                <h3 style={{ fontSize: "18px", color: "#334155" }}>Loading historical analysis...</h3>
+            </div>
+        )}
+
+        {/* ===================================================
+            NO DATA STATE
+        =================================================== */}
+        {!loading && !hasData && (
+            <div style={{ padding: '10px 0 0', marginBottom: '-8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: '#fef9c3', borderRadius: '8px', border: '1px solid #fde047', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '16px' }}>⚠️</span>
+                    <span style={{ fontSize: '13px', color: '#713f12' }}>No predictions found for these filters. Showing sample data below. <button onClick={handleReset} style={{ background: 'none', border: 'none', color: '#0284c7', textDecoration: 'underline', cursor: 'pointer', fontSize: '13px', padding: 0 }}>Clear Filters</button></span>
+                </div>
+            </div>
+        )}
+
+        {/* ===================================================
             STATS
         =================================================== */}
+        {!loading && (
+            <>
+
 
                 <section className="historical-stat-grid">
 
@@ -1077,7 +978,7 @@ function HistoricalAnalysis({
                             </span>
 
                             <strong>
-                                198
+                                {totalFloodEvents}
                             </strong>
 
                             <small>
@@ -1102,7 +1003,7 @@ function HistoricalAnalysis({
                             </span>
 
                             <strong>
-                                122
+                                {highRiskDays}
                             </strong>
 
                             <small>
@@ -1177,7 +1078,7 @@ function HistoricalAnalysis({
                             </span>
 
                             <strong>
-                                54%
+                                {meanProb}%
                             </strong>
 
                             <small>
@@ -1254,10 +1155,8 @@ function HistoricalAnalysis({
 
 
                         <LineChart
-                            values={floodEventChart}
-                            secondaryValues={
-                                highRiskChart
-                            }
+                            values={dynamicFloodEventChart}
+                            secondaryValues={dynamicHighRiskChart}
                             maxValue={80}
                         />
 
@@ -1308,7 +1207,7 @@ function HistoricalAnalysis({
                         </div>
 
 
-                        <BarLineChart />
+                        <BarLineChart rainfallData={dynamicRainfallChart} floodLineData={dynamicRainfallFloodLine} />
 
                     </div>
 
@@ -1487,7 +1386,7 @@ function HistoricalAnalysis({
                                     </small>
 
                                     <strong>
-                                        198
+                                        {totalFloodEvents}
                                     </strong>
 
                                     <span>
@@ -1624,12 +1523,8 @@ function HistoricalAnalysis({
 
 
                             <LineChart
-                                values={
-                                    predictionLine
-                                }
-                                secondaryValues={
-                                    actualLine
-                                }
+                                values={dynamicPredictionLine}
+                                secondaryValues={dynamicActualLine}
                                 maxValue={100}
                             />
 
@@ -1919,7 +1814,7 @@ function HistoricalAnalysis({
                         <span>
                             Showing 1 to{" "}
                             {filteredEvents.length}{" "}
-                            of 198 events
+                            of {totalFloodEvents} events
                         </span>
 
 
@@ -2024,6 +1919,8 @@ function HistoricalAnalysis({
                     </div>
 
                 </section>
+            </>
+        )}
 
             </div>
 

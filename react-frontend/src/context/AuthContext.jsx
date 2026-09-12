@@ -6,19 +6,26 @@ const API_URL = "http://127.0.0.1:8000/api/auth";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [settings, setSettings] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUser = async (authToken) => {
+  const fetchUserAndSettings = async (authToken) => {
     try {
-      const res = await fetch(`${API_URL}/me`, {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-      });
-      if (res.ok) {
-        const userData = await res.json();
-        setUser(userData);
+      const [meRes, setRes] = await Promise.all([
+        fetch(`${API_URL}/me`, { headers: { 'Authorization': `Bearer ${authToken}` } }),
+        fetch(`http://127.0.0.1:8000/api/settings`, { headers: { 'Authorization': `Bearer ${authToken}` } })
+      ]);
+      
+      if (meRes.ok) {
+        setUser(await meRes.json());
       } else {
         logout();
+        return;
+      }
+
+      if (setRes.ok) {
+        setSettings(await setRes.json());
       }
     } catch (e) {
       console.error("Auth me failed:", e);
@@ -30,7 +37,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      fetchUser(token);
+      fetchUserAndSettings(token);
     } else {
       setLoading(false);
     }
@@ -38,7 +45,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const formData = new URLSearchParams();
-    formData.append('username', email); // OAuth2 expects username
+    formData.append('username', email);
     formData.append('password', password);
 
     const res = await fetch(`${API_URL}/login`, {
@@ -55,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', data.access_token);
     localStorage.setItem('isLoggedIn', 'true');
     localStorage.setItem('user_email', email);
-    await fetchUser(data.access_token);
+    await fetchUserAndSettings(data.access_token);
     return data;
   };
 
@@ -69,9 +76,7 @@ export const AuthProvider = ({ children }) => {
       const text = await res.text();
       throw new Error(`Registration failed: ${text}`);
     }
-    // Auto login and return the user object (not just the JWT)
     await login(email, password);
-    // After login, user state is set. Return the registered user's data for role-based redirect.
     const meRes = await fetch(`${API_URL}/me`, {
       headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
     });
@@ -91,6 +96,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout failed:", e);
     } finally {
       setUser(null);
+      setSettings(null);
       setToken(null);
       localStorage.removeItem('token');
       localStorage.removeItem('isLoggedIn');
@@ -98,7 +104,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, settings, setSettings, token, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

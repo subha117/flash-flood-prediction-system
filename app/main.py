@@ -17,6 +17,7 @@ from app.api.auth.routes import router as auth_router
 from app.api.settings import router as settings_router
 from app.api.activity import router as activity_router
 from app.api.admin import router as admin_router
+from app.api.historical import router as historical_router
 
 # Create DB tables if they don't exist
 Base.metadata.create_all(bind=engine)
@@ -36,6 +37,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(settings_router, prefix="/api")
 app.include_router(activity_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
+app.include_router(historical_router, prefix="/api")
 
 @app.get("/")
 @app.get("/health")
@@ -198,31 +200,50 @@ def seed_dummy_predictions(db: Session = Depends(get_db)):
     from datetime import datetime, timedelta, timezone
     
     locations = [
-        {"name": "Dehradun", "lat": 30.3165, "lng": 78.0322, "district": "Dehradun"},
-        {"name": "Rudraprayag", "lat": 30.2840, "lng": 78.9810, "district": "Rudraprayag"},
-        {"name": "Chamoli", "lat": 30.4040, "lng": 79.3220, "district": "Chamoli"},
-        {"name": "Pauri Garhwal", "lat": 30.1500, "lng": 78.7800, "district": "Pauri Garhwal"},
-        {"name": "Uttarkashi", "lat": 30.7268, "lng": 78.4354, "district": "Uttarkashi"},
-        {"name": "Haridwar", "lat": 29.9457, "lng": 78.1642, "district": "Haridwar"}
+        {"name": "Dehradun", "lat": 30.3165, "lng": 78.0322, "district": "Dehradun", "state": "Uttarakhand", "elev": 640, "slope": 8},
+        {"name": "Rudraprayag", "lat": 30.2840, "lng": 78.9810, "district": "Rudraprayag", "state": "Uttarakhand", "elev": 895, "slope": 18},
+        {"name": "Chamoli", "lat": 30.4040, "lng": 79.3220, "district": "Chamoli", "state": "Uttarakhand", "elev": 1350, "slope": 22},
+        {"name": "Uttarkashi", "lat": 30.7268, "lng": 78.4354, "district": "Uttarkashi", "state": "Uttarakhand", "elev": 1158, "slope": 20},
+        {"name": "Haridwar", "lat": 29.9457, "lng": 78.1642, "district": "Haridwar", "state": "Uttarakhand", "elev": 314, "slope": 5},
+        {"name": "Kolkata", "lat": 22.5726, "lng": 88.3639, "district": "Kolkata", "state": "West Bengal", "elev": 6, "slope": 0.5},
+        {"name": "Barasat", "lat": 22.7266, "lng": 88.5000, "district": "North 24 Parganas", "state": "West Bengal", "elev": 9, "slope": 0.8},
+        {"name": "Darjeeling", "lat": 27.0360, "lng": 88.2627, "district": "Darjeeling", "state": "West Bengal", "elev": 2042, "slope": 25},
+        {"name": "Patna", "lat": 25.5941, "lng": 85.1376, "district": "Patna", "state": "Bihar", "elev": 53, "slope": 2},
+        {"name": "Muzaffarpur", "lat": 26.1209, "lng": 85.3647, "district": "Muzaffarpur", "state": "Bihar", "elev": 60, "slope": 1.5},
+        {"name": "Guwahati", "lat": 26.1445, "lng": 91.7362, "district": "Kamrup", "state": "Assam", "elev": 54, "slope": 3},
+        {"name": "Dibrugarh", "lat": 27.4728, "lng": 94.9120, "district": "Dibrugarh", "state": "Assam", "elev": 111, "slope": 4},
+        {"name": "Bhubaneswar", "lat": 20.2961, "lng": 85.8245, "district": "Khordha", "state": "Odisha", "elev": 45, "slope": 2},
+        {"name": "Puri", "lat": 19.8135, "lng": 85.8312, "district": "Puri", "state": "Odisha", "elev": 6, "slope": 0.5},
+        {"name": "Bengaluru", "lat": 12.9716, "lng": 77.5946, "district": "Bangalore Urban", "state": "Karnataka", "elev": 920, "slope": 3},
+        {"name": "Mangaluru", "lat": 12.9141, "lng": 74.8560, "district": "Dakshina Kannada", "state": "Karnataka", "elev": 22, "slope": 5},
+        {"name": "Mumbai", "lat": 19.0760, "lng": 72.8777, "district": "Mumbai", "state": "Maharashtra", "elev": 11, "slope": 1},
+        {"name": "Pune", "lat": 18.5204, "lng": 73.8567, "district": "Pune", "state": "Maharashtra", "elev": 560, "slope": 6},
+        {"name": "Kochi", "lat": 9.9312, "lng": 76.2673, "district": "Ernakulam", "state": "Kerala", "elev": 4, "slope": 0.5},
+        {"name": "Thrissur", "lat": 10.5276, "lng": 76.2144, "district": "Thrissur", "state": "Kerala", "elev": 2.83, "slope": 0.8},
     ]
     
     risks = [
-        ("CRITICAL", 0.85, 0.99, 150, 300),
-        ("HIGH", 0.65, 0.84, 80, 149),
-        ("MEDIUM", 0.35, 0.64, 40, 79),
+        ("CRITICAL", 0.85, 0.99, 200, 350),
+        ("HIGH", 0.65, 0.84, 100, 199),
+        ("MODERATE", 0.35, 0.64, 40, 99),
         ("LOW", 0.05, 0.34, 5, 39)
     ]
     
     now = datetime.now(timezone.utc)
+    count = 0
     
-    for i in range(100):
+    # Seed 500 predictions spread over 5 years
+    for i in range(500):
         loc = random.choice(locations)
-        risk_def = random.choices(risks, weights=[10, 20, 30, 40])[0]
+        risk_def = random.choices(risks, weights=[15, 25, 35, 25])[0]
         
         prob = random.uniform(risk_def[1], risk_def[2])
         rain_24h = random.uniform(risk_def[3], risk_def[4])
         
-        timestamp = now - timedelta(minutes=random.randint(1, 1440))
+        # Spread over 5 years (monsoon season weighted)
+        days_ago = random.randint(1, 365 * 5)
+        # Add monsoon weighting: July-September have more events
+        timestamp = now - timedelta(days=days_ago, hours=random.randint(0, 23))
         
         pred = Prediction(
             timestamp=timestamp,
@@ -230,25 +251,26 @@ def seed_dummy_predictions(db: Session = Depends(get_db)):
             longitude=loc["lng"],
             location_name=loc["name"],
             district=loc["district"],
-            state="Uttarakhand",
-            elevation_m=1000,
-            slope_degree=15,
+            state=loc["state"],
+            elevation_m=loc["elev"],
+            slope_degree=loc["slope"],
             rainfall_mm_hr=rain_24h / 24,
             rain_1h=rain_24h / 24,
             rain_3h=rain_24h / 8,
             rain_6h=rain_24h / 4,
             rain_12h=rain_24h / 2,
             rain_24h=rain_24h,
-            rainfall_change=random.uniform(-5, 10),
+            rainfall_change=random.uniform(-10, 20),
             prediction=1 if prob > 0.5 else 0,
             flood_probability=prob,
             risk_level=risk_def[0],
             data_source="SYSTEM_SIMULATION"
         )
         db.add(pred)
+        count += 1
         
     db.commit()
-    return {"message": "Seeded 100 predictions"}
+    return {"message": f"Seeded {count} predictions across 20 locations and 5 years"}
 
 import os
 from fastapi.staticfiles import StaticFiles
