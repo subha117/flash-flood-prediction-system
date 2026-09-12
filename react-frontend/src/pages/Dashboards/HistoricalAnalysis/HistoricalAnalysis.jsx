@@ -337,14 +337,14 @@ function LineChart({
    BAR + LINE CHART
 ========================================================= */
 
-function BarLineChart() {
+function BarLineChart({ rainfallData = [], floodLineData = [] }) {
 
     const width = 420;
     const height = 160;
 
     const linePoints =
         buildPolylinePoints(
-            rainfallFloodLine,
+            floodLineData,
             width,
             height,
             80
@@ -355,7 +355,7 @@ function BarLineChart() {
 
             <div className="bar-area">
 
-                {dynamicRainfallChart.map(
+                {rainfallData.map(
                     (value, index) => (
 
                         <div
@@ -497,10 +497,12 @@ function HistoricalAnalysis({
     
     const dynamicRiskDist = apiData?.risk_distribution || [];
     const cData = apiData?.chart_data || [];
-    const dynamicRainfallChart = cData.map(d => d.rainfall || 0);
-    const dynamicRainfallFloodLine = cData.map(d => d.floods * 10 || 0);
-    if(dynamicRainfallChart.length === 0) dynamicRainfallChart.push(0);
-    if(dynamicRainfallFloodLine.length === 0) dynamicRainfallFloodLine.push(0);
+    const dynamicRainfallChart = cData.length > 0 ? cData.map(d => d.rainfall || 0) : rainfallChart;
+    const dynamicRainfallFloodLine = cData.length > 0 ? cData.map(d => d.floods * 10 || 0) : rainfallFloodLine;
+    const dynamicFloodEventChart = cData.length > 0 ? cData.map(d => Math.min(80, (d.floods || 0) * 5)) : floodEventChart;
+    const dynamicHighRiskChart = cData.length > 0 ? cData.map(d => Math.min(80, (d.risk_days || 0) * 5)) : highRiskChart;
+    const dynamicPredictionLine = cData.length > 0 ? cData.map(d => Math.min(100, (d.floods || 0) * 8)) : predictionLine;
+    const dynamicActualLine = cData.length > 0 ? cData.map(d => Math.min(100, (d.risk_days || 0) * 8)) : actualLine;
 
 
     /* =======================================================
@@ -1146,10 +1148,8 @@ function HistoricalAnalysis({
 
 
                         <LineChart
-                            values={floodEventChart}
-                            secondaryValues={
-                                highRiskChart
-                            }
+                            values={dynamicFloodEventChart}
+                            secondaryValues={dynamicHighRiskChart}
                             maxValue={80}
                         />
 
@@ -1200,7 +1200,7 @@ function HistoricalAnalysis({
                         </div>
 
 
-                        <BarLineChart />
+                        <BarLineChart rainfallData={dynamicRainfallChart} floodLineData={dynamicRainfallFloodLine} />
 
                     </div>
 
@@ -1516,12 +1516,8 @@ function HistoricalAnalysis({
 
 
                             <LineChart
-                                values={
-                                    predictionLine
-                                }
-                                secondaryValues={
-                                    actualLine
-                                }
+                                values={dynamicPredictionLine}
+                                secondaryValues={dynamicActualLine}
                                 maxValue={100}
                             />
 
