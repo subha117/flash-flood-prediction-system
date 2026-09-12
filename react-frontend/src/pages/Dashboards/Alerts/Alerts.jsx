@@ -1,29 +1,25 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useContext } from "react";
 import {
     Search,
     Bell,
-    User,
     ChevronDown,
     AlertTriangle,
     MapPin,
     ArrowRight,
     SlidersHorizontal,
-    Eye,
     ChevronLeft,
     ChevronRight,
     CloudRain,
     Waves,
     Info,
-    Layers,
-    Plus,
-    Minus,
     X,
+    CheckCircle2,
 } from "lucide-react";
 
 import {
     MapContainer,
     TileLayer,
-    Marker,
+    CircleMarker,
     Popup,
     useMap,
 } from "react-leaflet";
@@ -31,25 +27,47 @@ import {
 import "leaflet/dist/leaflet.css";
 
 import Sidebar from "../../../components/Sidebar/Sidebar";
+import { AuthContext } from "../../../context/AuthContext";
+import { LocationContext } from "../../../context/LocationContext";
 import "./Alerts.css";
 
+/* =========================================================
+   MAP RESIZE CONTROLLER
+========================================================= */
+function MapController({ center, zoom }) {
+    const map = useMap();
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+            if (center) {
+                map.flyTo(center, zoom || 8, { duration: 0.6 });
+            }
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [map, center, zoom]);
+    return null;
+}
+
+/* =========================================================
+   ALERTS SEED DATA (UTTARAKHAND CATCHMENT BASINS)
+========================================================= */
 const ALERTS_DATA = [
     {
         id: "ALT-2026-0007",
-        location: "Selected District",
-        district: "Selected District",
+        location: "Tehri",
+        district: "Tehri Garhwal",
         risk: "CRITICAL",
         type: "Flash Flood Warning",
         triggered: "30 Aug 2026, 10:20 AM",
         validUntil: "30 Aug 2026, 04:20 PM",
         probability: 92,
+        rainfall24h: 156.4,
         status: "Active",
         description:
             "Heavy rainfall predicted in next 6 hours. Flash flood highly likely in low-lying areas and near river channels.",
-        impact: "Immediate action required",
-        lat: 56,
-        top: 53,
-        color: "red",
+        impact: "Immediate evacuation of low-lying settlements required",
+        lat: 30.372,
+        lng: 78.492,
     },
     {
         id: "ALT-2026-0006",
@@ -60,13 +78,13 @@ const ALERTS_DATA = [
         triggered: "30 Aug 2026, 09:45 AM",
         validUntil: "30 Aug 2026, 03:45 PM",
         probability: 85,
+        rainfall24h: 128.5,
         status: "Active",
         description:
-            "River level crossed warning threshold. Immediate precautions advised in nearby areas.",
-        impact: "Precaution required",
-        lat: 67,
-        top: 45,
-        color: "red",
+            "River level crossed warning threshold. Immediate precautions advised near river confluences.",
+        impact: "High precaution advised along riverbeds",
+        lat: 30.284,
+        lng: 78.981,
     },
     {
         id: "ALT-2026-0005",
@@ -77,13 +95,13 @@ const ALERTS_DATA = [
         triggered: "30 Aug 2026, 09:10 AM",
         validUntil: "30 Aug 2026, 02:10 PM",
         probability: 78,
+        rainfall24h: 112.0,
         status: "Active",
         description:
-            "Very high rainfall intensity detected. Flash flood possible in vulnerable regions.",
-        impact: "High caution",
-        lat: 79,
-        top: 46,
-        color: "red",
+            "Very high rainfall intensity detected. Flash flood possible in vulnerable mountain valleys.",
+        impact: "High caution in hilly drainages",
+        lat: 30.404,
+        lng: 79.322,
     },
     {
         id: "ALT-2026-0004",
@@ -94,13 +112,13 @@ const ALERTS_DATA = [
         triggered: "30 Aug 2026, 08:35 AM",
         validUntil: "30 Aug 2026, 01:35 PM",
         probability: 62,
+        rainfall24h: 84.5,
         status: "Active",
         description:
-            "Moderate flood risk due to persistent rainfall and saturated catchments.",
-        impact: "Stay alert",
-        lat: 59,
-        top: 70,
-        color: "yellow",
+            "Moderate flood risk due to persistent rainfall and saturated catchment soils.",
+        impact: "Stay alert near stream banks",
+        lat: 30.15,
+        lng: 78.78,
     },
     {
         id: "ALT-2026-0003",
@@ -111,13 +129,13 @@ const ALERTS_DATA = [
         triggered: "30 Aug 2026, 08:00 AM",
         validUntil: "30 Aug 2026, 01:00 PM",
         probability: 55,
+        rainfall24h: 76.2,
         status: "Active",
         description:
-            "Heavy rainfall expected over upper catchments. Localized flash flooding possible.",
+            "Heavy rainfall expected over upper catchments. Localized stream swelling possible.",
         impact: "Monitor conditions",
-        lat: 63,
-        top: 26,
-        color: "yellow",
+        lat: 30.7268,
+        lng: 78.4354,
     },
     {
         id: "ALT-2026-0002",
@@ -128,13 +146,13 @@ const ALERTS_DATA = [
         triggered: "30 Aug 2026, 07:30 AM",
         validUntil: "30 Aug 2026, 12:30 PM",
         probability: 28,
+        rainfall24h: 32.0,
         status: "Active",
         description:
             "Light to moderate rainfall expected. No immediate flood threat detected.",
         impact: "Normal conditions",
-        lat: 37,
-        top: 72,
-        color: "green",
+        lat: 29.9457,
+        lng: 78.1642,
     },
     {
         id: "ALT-2026-0001",
@@ -145,13 +163,13 @@ const ALERTS_DATA = [
         triggered: "30 Aug 2026, 07:15 AM",
         validUntil: "30 Aug 2026, 12:15 PM",
         probability: 22,
+        rainfall24h: 24.5,
         status: "Active",
         description:
-            "Weather conditions remain within normal range with low flood probability.",
+            "Weather conditions remain within normal seasonal ranges with low flood probability.",
         impact: "Normal conditions",
-        lat: 76,
-        top: 68,
-        color: "green",
+        lat: 29.3919,
+        lng: 79.4542,
     },
     {
         id: "ALT-2026-0008",
@@ -162,12 +180,13 @@ const ALERTS_DATA = [
         triggered: "29 Aug 2026, 11:50 PM",
         validUntil: "30 Aug 2026, 05:50 AM",
         probability: 73,
+        rainfall24h: 118.0,
         status: "Active",
-        description: "Heavy rainfall may cause rapid runoff in urban and hilly catchments.",
-        impact: "High caution",
-        lat: 31,
-        top: 43,
-        color: "orange",
+        description:
+            "Heavy rainfall may cause rapid runoff in Bindal and Rispana catchment corridors.",
+        impact: "High caution in low areas",
+        lat: 30.3165,
+        lng: 78.0322,
     },
     {
         id: "ALT-2026-0009",
@@ -178,114 +197,19 @@ const ALERTS_DATA = [
         triggered: "29 Aug 2026, 10:40 PM",
         validUntil: "30 Aug 2026, 04:40 AM",
         probability: 58,
+        rainfall24h: 68.0,
         status: "Active",
-        description: "Moisture convergence may trigger short-duration intense rainfall.",
+        description:
+            "Moisture convergence may trigger short-duration intense rainfall cells.",
         impact: "Stay alert",
-        lat: 82,
-        top: 76,
-        color: "orange",
-    },
-    {
-        id: "ALT-2026-0010",
-        location: "Selected District",
-        district: "Selected District",
-        risk: "CRITICAL",
-        type: "River Level Warning",
-        triggered: "29 Aug 2026, 09:25 PM",
-        validUntil: "30 Aug 2026, 03:25 AM",
-        probability: 90,
-        status: "Active",
-        description: "River levels are rising rapidly after upstream rainfall.",
-        impact: "Immediate action required",
-        lat: 54,
-        top: 60,
-        color: "red",
-    },
-    {
-        id: "ALT-2026-0011",
-        location: "Chamoli",
-        district: "Chamoli",
-        risk: "HIGH",
-        type: "Flash Flood Warning",
-        triggered: "29 Aug 2026, 08:15 PM",
-        validUntil: "30 Aug 2026, 02:15 AM",
-        probability: 81,
-        status: "Active",
-        description: "High-risk rainfall cells detected around vulnerable valleys.",
-        impact: "High caution",
-        lat: 76,
-        top: 39,
-        color: "orange",
-    },
-    {
-        id: "ALT-2026-0012",
-        location: "Rudraprayag",
-        district: "Rudraprayag",
-        risk: "MODERATE",
-        type: "Weather Advisory",
-        triggered: "29 Aug 2026, 07:30 PM",
-        validUntil: "30 Aug 2026, 01:30 AM",
-        probability: 52,
-        status: "Active",
-        description: "Rainfall remains moderate but soils are becoming saturated.",
-        impact: "Monitor conditions",
-        lat: 70,
-        top: 52,
-        color: "yellow",
-    },
-    {
-        id: "ALT-2026-0013",
-        location: "Pauri Garhwal",
-        district: "Pauri Garhwal",
-        risk: "LOW",
-        type: "Weather Advisory",
-        triggered: "29 Aug 2026, 06:45 PM",
-        validUntil: "30 Aug 2026, 12:45 AM",
-        probability: 26,
-        status: "Active",
-        description: "Low flood probability with scattered showers.",
-        impact: "Normal conditions",
-        lat: 54,
-        top: 66,
-        color: "green",
-    },
-    {
-        id: "ALT-2026-0014",
-        location: "Uttarkashi",
-        district: "Uttarkashi",
-        risk: "HIGH",
-        type: "Flash Flood Watch",
-        triggered: "29 Aug 2026, 05:40 PM",
-        validUntil: "29 Aug 2026, 11:40 PM",
-        probability: 77,
-        status: "Active",
-        description: "Short-duration rainfall cells may produce rapid runoff.",
-        impact: "High caution",
-        lat: 60,
-        top: 35,
-        color: "orange",
-    },
-    {
-        id: "ALT-2026-0015",
-        location: "Haridwar",
-        district: "Haridwar",
-        risk: "LOW",
-        type: "River Level Warning",
-        triggered: "29 Aug 2026, 04:20 PM",
-        validUntil: "29 Aug 2026, 10:20 PM",
-        probability: 18,
-        status: "Active",
-        description: "River levels remain below warning stage.",
-        impact: "Normal conditions",
-        lat: 41,
-        top: 68,
-        color: "green",
+        lat: 29.5892,
+        lng: 79.6467,
     },
 ];
 
 const DISTRICTS = [
     "All Districts",
-    "Selected District",
+    "Tehri Garhwal",
     "Rudraprayag",
     "Chamoli",
     "Pauri Garhwal",
@@ -306,57 +230,24 @@ const TYPES = [
     "Weather Advisory",
 ];
 
-function getRiskIcon(risk, size = 17) {
-    if (risk === "LOW") return <Info size={size} />;
-    if (risk === "MODERATE") return <AlertTriangle size={size} />;
-    return <AlertTriangle size={size} />;
-}
-
-function riskClass(risk) {
-    return risk.toLowerCase().replace(/\s+/g, "-");
-}
-
-function FixMapSize() {
-    const map = useMap();
-
-    useEffect(() => {
-        const refresh = () => {
-            map.invalidateSize(true);
-
-            const tiles = map.getContainer().querySelectorAll("img.leaflet-tile");
-            tiles.forEach((tile) => {
-                tile.style.setProperty("opacity", "1", "important");
-                tile.style.setProperty("visibility", "visible", "important");
-                tile.style.setProperty("filter", "contrast(1.35) saturate(1.25) brightness(0.97)", "important");
-                tile.style.setProperty("mix-blend-mode", "normal", "important");
-            });
-        };
-
-        const timers = [100, 400, 900, 1500].map((delay) =>
-            setTimeout(refresh, delay)
-        );
-
-        const observer = new MutationObserver(refresh);
-        observer.observe(map.getContainer(), {
-            subtree: true,
-            childList: true,
-            attributes: true,
-            attributeFilter: ["style", "class"],
-        });
-
-        window.addEventListener("resize", refresh);
-
-        return () => {
-            timers.forEach(clearTimeout);
-            observer.disconnect();
-            window.removeEventListener("resize", refresh);
-        };
-    }, [map]);
-
-    return null;
+function getMarkerColor(risk) {
+    switch (risk) {
+        case "CRITICAL":
+            return { stroke: "#b91c1c", fill: "#ef4444" };
+        case "HIGH":
+            return { stroke: "#c2410c", fill: "#f97316" };
+        case "MODERATE":
+            return { stroke: "#a16207", fill: "#eab308" };
+        case "LOW":
+        default:
+            return { stroke: "#15803d", fill: "#22c55e" };
+    }
 }
 
 function Alerts({ onNavigate }) {
+    const { user } = useContext(AuthContext);
+    const { currentLocation, alerts: contextAlerts, activeAlertCount } = useContext(LocationContext);
+
     const [search, setSearch] = useState("");
     const [district, setDistrict] = useState("All Districts");
     const [risk, setRisk] = useState("All Risk Levels");
@@ -366,18 +257,27 @@ function Alerts({ onNavigate }) {
     const [profileOpen, setProfileOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [selectedAlert, setSelectedAlert] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState("ALL");
     const [mapMode, setMapMode] = useState("All");
+    const [mapCenter, setMapCenter] = useState([30.372, 78.492]);
+    const [mapZoom, setMapZoom] = useState(8);
     const [page, setPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(7);
-    const [mapZoom, setMapZoom] = useState(1);
 
+    // Auto email dispatch tracking
+    const [autoEmailStatus, setAutoEmailStatus] = useState("idle");
     const [apiAlerts, setApiAlerts] = useState([]);
-    
+
+    // Effective recipient email
+    const recipientEmail =
+        user?.email || localStorage.getItem("user_email") || "user@example.com";
+
+    // Fetch API alerts
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/api/alerts')
-            .then(r => r.json())
-            .then(data => {
-                const formatted = data.map(a => ({
+        fetch("http://127.0.0.1:8000/api/alerts")
+            .then((r) => r.json())
+            .then((data) => {
+                const formatted = data.map((a) => ({
                     id: `API-${a.id}`,
                     location: a.location_name || "Unknown",
                     district: a.location_name || "Unknown",
@@ -386,20 +286,81 @@ function Alerts({ onNavigate }) {
                     triggered: new Date(a.timestamp).toLocaleString(),
                     validUntil: "N/A",
                     probability: Math.round(a.probability * 100),
+                    rainfall24h: 130.0,
                     status: a.resolved ? "Resolved" : "Active",
-                    description: a.reason,
+                    description: a.reason || "Severe hydrological runoff reported.",
                     impact: a.risk_level === "CRITICAL" ? "Immediate action required" : "Stay alert",
                     lat: a.latitude || 30.372,
-                    top: 50,
-                    color: a.risk_level === "CRITICAL" ? "red" : "orange",
+                    lng: a.longitude || 78.492,
                 }));
                 setApiAlerts(formatted);
             })
-            .catch(console.error);
+            .catch(() => {});
     }, []);
 
     const allAlerts = useMemo(() => [...apiAlerts, ...ALERTS_DATA], [apiAlerts]);
 
+    // Check if the user's location has a Critical or High threat
+    const activeThreatInUserArea = useMemo(() => {
+        if (!allAlerts.length) return null;
+        const userLoc = (currentLocation?.name || "Tehri").toLowerCase();
+        const userDist = (currentLocation?.district || "").toLowerCase();
+
+        return (
+            allAlerts.find((alert) => {
+                const isHighOrCritical =
+                    alert.risk === "CRITICAL" || alert.risk === "HIGH";
+                if (!isHighOrCritical) return false;
+
+                const aLoc = alert.location.toLowerCase();
+                const aDist = alert.district.toLowerCase();
+
+                return (
+                    aLoc.includes(userLoc) ||
+                    userLoc.includes(aLoc) ||
+                    (userDist && (aDist.includes(userDist) || userDist.includes(aDist)))
+                );
+            }) || allAlerts.find((a) => a.risk === "CRITICAL") || null
+        );
+    }, [allAlerts, currentLocation]);
+
+    // AUTOMATICALLY DISPATCH EMAIL IN THE BACKGROUND TO USER'S EMAIL
+    useEffect(() => {
+        if (activeThreatInUserArea && recipientEmail) {
+            const sessionKey = `sent_alert_${recipientEmail}_${activeThreatInUserArea.id}`;
+            const alreadySent = sessionStorage.getItem(sessionKey);
+
+            if (!alreadySent) {
+                fetch("http://127.0.0.1:8000/api/alerts/notify-critical-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: recipientEmail,
+                        user_name: user?.name || "Resident",
+                        location_name: activeThreatInUserArea.location,
+                        risk_level: activeThreatInUserArea.risk,
+                        flood_probability: activeThreatInUserArea.probability / 100,
+                        rainfall_24h: activeThreatInUserArea.rainfall24h || 120.0,
+                        alert_id: activeThreatInUserArea.id,
+                        reason: activeThreatInUserArea.description,
+                        force: false,
+                    }),
+                })
+                    .then((r) => r.json())
+                    .then((data) => {
+                        if (data && data.success) {
+                            sessionStorage.setItem(sessionKey, "true");
+                            setAutoEmailStatus("sent");
+                        }
+                    })
+                    .catch(() => {});
+            } else {
+                setAutoEmailStatus("sent");
+            }
+        }
+    }, [activeThreatInUserArea, recipientEmail, user]);
+
+    // Table filtering logic
     const filteredAlerts = useMemo(() => {
         return allAlerts.filter((alert) => {
             const query = search.trim().toLowerCase();
@@ -412,11 +373,14 @@ function Alerts({ onNavigate }) {
                 alert.type.toLowerCase().includes(query);
 
             const matchesDistrict =
-                district === "All Districts" || alert.district === district;
+                district === "All Districts" ||
+                alert.district.toLowerCase() === district.toLowerCase();
 
-            const matchesRisk = risk === "All Risk Levels" || alert.risk === risk;
+            const matchesRisk =
+                risk === "All Risk Levels" || alert.risk === risk;
 
-            const matchesType = type === "All Types" || alert.type === type;
+            const matchesType =
+                type === "All Types" || alert.type === type;
 
             const matchesStatus = !activeOnly || alert.status === "Active";
 
@@ -443,17 +407,85 @@ function Alerts({ onNavigate }) {
         return filteredAlerts.slice(start, start + rowsPerPage);
     }, [filteredAlerts, page, rowsPerPage]);
 
-    const recentCritical = allAlerts.filter(
-        (alert) => alert.risk === "CRITICAL"
-    ).slice(0, 3);
-
     const counts = {
-        critical: allAlerts.filter(a => a.risk === "CRITICAL").length,
-        high: allAlerts.filter(a => a.risk === "HIGH").length,
-        moderate: allAlerts.filter(a => a.risk === "MODERATE").length,
-        low: allAlerts.filter(a => a.risk === "LOW").length,
+        critical: allAlerts.filter((a) => a.risk === "CRITICAL").length,
+        high: allAlerts.filter((a) => a.risk === "HIGH").length,
+        moderate: allAlerts.filter((a) => a.risk === "MODERATE").length,
+        low: allAlerts.filter((a) => a.risk === "LOW").length,
         total: allAlerts.length,
     };
+
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+        setRisk(category === "ALL" ? "All Risk Levels" : category);
+        setMapMode(category === "ALL" ? "All" : category);
+        setPage(1);
+
+        if (category === "ALL") {
+            setMapCenter([30.372, 78.492]);
+            setMapZoom(8);
+        } else {
+            const firstMatching = allAlerts.find((a) => a.risk === category);
+            if (firstMatching && firstMatching.lat && firstMatching.lng) {
+                setMapCenter([firstMatching.lat, firstMatching.lng]);
+                setMapZoom(9);
+            } else {
+                setMapCenter([30.372, 78.492]);
+                setMapZoom(8);
+            }
+        }
+    };
+
+    const handleAlertSelect = (alert) => {
+        setSelectedAlert(alert);
+        if (alert.lat && alert.lng) {
+            setMapCenter([alert.lat, alert.lng]);
+            setMapZoom(10);
+        }
+    };
+
+    const categoryAlerts = useMemo(() => {
+        if (selectedCategory === "ALL") {
+            return [...allAlerts].sort((a, b) => b.probability - a.probability).slice(0, 4);
+        }
+        return allAlerts.filter((a) => a.risk === selectedCategory).slice(0, 4);
+    }, [allAlerts, selectedCategory]);
+
+    const categoryMeta = useMemo(() => {
+        switch (selectedCategory) {
+            case "CRITICAL":
+                return {
+                    title: "Recent Critical Alerts",
+                    countText: `${counts.critical} Critical Alert${counts.critical === 1 ? "" : "s"} Active`,
+                    type: "critical",
+                };
+            case "HIGH":
+                return {
+                    title: "Recent High Alerts",
+                    countText: `${counts.high} High Alert${counts.high === 1 ? "" : "s"} Active`,
+                    type: "high",
+                };
+            case "MODERATE":
+                return {
+                    title: "Recent Moderate Alerts",
+                    countText: `${counts.moderate} Moderate Alert${counts.moderate === 1 ? "" : "s"} Active`,
+                    type: "moderate",
+                };
+            case "LOW":
+                return {
+                    title: "Recent Low Alerts",
+                    countText: `${counts.low} Low Alert${counts.low === 1 ? "" : "s"} Active`,
+                    type: "low",
+                };
+            case "ALL":
+            default:
+                return {
+                    title: "Recent Active Alerts",
+                    countText: `${counts.total} Total Alerts Active`,
+                    type: "all",
+                };
+        }
+    }, [selectedCategory, counts]);
 
     const clearFilters = () => {
         setSearch("");
@@ -462,31 +494,46 @@ function Alerts({ onNavigate }) {
         setType("All Types");
         setActiveOnly(false);
         setMapMode("All");
-        setPage(1);
-    };
-
-    const handleRowsPerPage = (value) => {
-        const next = Number(value);
-        setRowsPerPage(next);
+        setSelectedCategory("ALL");
+        setMapCenter([30.372, 78.492]);
+        setMapZoom(8);
         setPage(1);
     };
 
     const handleLogout = () => {
         localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("token");
         window.location.href = "/";
     };
 
-    const mapMarkers = allAlerts.filter((alert) => {
-        if (mapMode === "All") return true;
-        if (mapMode === "Critical") return alert.risk === "CRITICAL";
-        return alert.risk === mapMode;
-    });
+    const mapMarkers = useMemo(() => {
+        if (selectedCategory === "ALL") return allAlerts;
+        return allAlerts.filter((alert) => alert.risk === selectedCategory);
+    }, [allAlerts, selectedCategory]);
+
+    const userDisplayName = user?.name || "Souvik Konar";
+    const userDisplayRole = user?.role || "Admin";
+    const userInitials =
+        userDisplayName
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2) || "SK";
+
+    const effectiveAlertCount =
+        activeAlertCount !== undefined
+            ? activeAlertCount
+            : contextAlerts && contextAlerts.length > 0
+            ? contextAlerts.length
+            : counts.critical || 1;
 
     return (
         <div className="alerts-page">
-            <Sidebar activePage="alerts" onNavigate={onNavigate} />
+            <Sidebar activePage="alerts" onNavigate={onNavigate} alertCount={effectiveAlertCount} />
 
             <main className="alerts-main">
+                {/* NORMAL TOP HEADER */}
                 <header className="alerts-header">
                     <div className="alerts-title">
                         <h1>Alerts</h1>
@@ -504,7 +551,7 @@ function Alerts({ onNavigate }) {
                                 placeholder="Search location..."
                                 type="text"
                             />
-                            <Search size={18} />
+                            <Search size={17} />
                         </div>
 
                         <div className="alert-header-icon-wrap">
@@ -516,16 +563,19 @@ function Alerts({ onNavigate }) {
                                     setProfileOpen(false);
                                 }}
                             >
-                                <Bell size={21} />
-                                {apiAlerts.length > 0 && <span>{apiAlerts.length}</span>}
+                                <Bell size={20} />
+                                {effectiveAlertCount > 0 && <span>{effectiveAlertCount}</span>}
                             </button>
 
                             {notificationsOpen && (
                                 <div className="mini-dropdown notification-dropdown">
-                                    <strong>Notifications</strong>
-                                    <p>3 critical alerts require attention.</p>
-                                    <p>8 high-risk alerts are active.</p>
-                                    <button type="button" onClick={() => setNotificationsOpen(false)}>
+                                    <strong>Active Alerts</strong>
+                                    <p>{effectiveAlertCount} active alert{effectiveAlertCount === 1 ? "" : "s"} require attention.</p>
+                                    <p>{counts.high} high-risk warnings are active.</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setNotificationsOpen(false)}
+                                    >
                                         Close
                                     </button>
                                 </div>
@@ -541,10 +591,10 @@ function Alerts({ onNavigate }) {
                                     setNotificationsOpen(false);
                                 }}
                             >
-                                <div className="alert-avatar">SK</div>
+                                <div className="alert-avatar">{userInitials}</div>
                                 <div className="alert-profile-text">
-                                    <strong>Souvik Konar</strong>
-                                    <span>Admin</span>
+                                    <strong>{userDisplayName}</strong>
+                                    <span>{userDisplayRole}</span>
                                 </div>
                                 <ChevronDown size={14} />
                             </button>
@@ -553,7 +603,11 @@ function Alerts({ onNavigate }) {
                                 <div className="mini-dropdown profile-dropdown">
                                     <button type="button">My Profile</button>
                                     <button type="button">Settings</button>
-                                    <button type="button" className="logout-btn" onClick={handleLogout}>
+                                    <button
+                                        type="button"
+                                        className="logout-btn"
+                                        onClick={handleLogout}
+                                    >
                                         Logout
                                     </button>
                                 </div>
@@ -563,19 +617,36 @@ function Alerts({ onNavigate }) {
                 </header>
 
                 <section className="alerts-content">
+                    {/* AUTOMATED EMAIL DISPATCH STATUS BANNER */}
+                    {activeThreatInUserArea && (
+                        <div className="location-warning-strip">
+                            <AlertTriangle size={18} className="warning-strip-icon" />
+                            <div className="warning-strip-text">
+                                <strong>Severe Flood Warning for {activeThreatInUserArea.location}: </strong>
+                                <span>
+                                    {activeThreatInUserArea.description} (Risk: {activeThreatInUserArea.probability}%).
+                                    {autoEmailStatus === "sent" ? (
+                                        <span> An emergency notification email has been automatically dispatched to <strong>{recipientEmail}</strong>.</span>
+                                    ) : (
+                                        <span> Emergency alert notification linked to <strong>{recipientEmail}</strong>.</span>
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* SECTION EYEBROW */}
                     <div className="section-eyebrow">ALERT OVERVIEW</div>
 
+                    {/* NORMAL STAT CARDS GRID */}
                     <div className="alert-stat-grid">
                         <button
                             type="button"
-                            className="alert-stat-card critical"
-                            onClick={() => {
-                                setRisk("CRITICAL");
-                                setPage(1);
-                            }}
+                            className={`alert-stat-card critical ${selectedCategory === "CRITICAL" ? "selected" : ""}`}
+                            onClick={() => handleCategoryChange("CRITICAL")}
                         >
                             <div className="alert-stat-icon">
-                                <AlertTriangle size={22} />
+                                <AlertTriangle size={20} />
                             </div>
                             <div>
                                 <strong>{counts.critical}</strong>
@@ -586,14 +657,11 @@ function Alerts({ onNavigate }) {
 
                         <button
                             type="button"
-                            className="alert-stat-card high"
-                            onClick={() => {
-                                setRisk("HIGH");
-                                setPage(1);
-                            }}
+                            className={`alert-stat-card high ${selectedCategory === "HIGH" ? "selected" : ""}`}
+                            onClick={() => handleCategoryChange("HIGH")}
                         >
                             <div className="alert-stat-icon">
-                                <AlertTriangle size={22} />
+                                <AlertTriangle size={20} />
                             </div>
                             <div>
                                 <strong>{counts.high}</strong>
@@ -604,14 +672,11 @@ function Alerts({ onNavigate }) {
 
                         <button
                             type="button"
-                            className="alert-stat-card moderate"
-                            onClick={() => {
-                                setRisk("MODERATE");
-                                setPage(1);
-                            }}
+                            className={`alert-stat-card moderate ${selectedCategory === "MODERATE" ? "selected" : ""}`}
+                            onClick={() => handleCategoryChange("MODERATE")}
                         >
                             <div className="alert-stat-icon">
-                                <AlertTriangle size={22} />
+                                <CloudRain size={20} />
                             </div>
                             <div>
                                 <strong>{counts.moderate}</strong>
@@ -622,14 +687,11 @@ function Alerts({ onNavigate }) {
 
                         <button
                             type="button"
-                            className="alert-stat-card low"
-                            onClick={() => {
-                                setRisk("LOW");
-                                setPage(1);
-                            }}
+                            className={`alert-stat-card low ${selectedCategory === "LOW" ? "selected" : ""}`}
+                            onClick={() => handleCategoryChange("LOW")}
                         >
                             <div className="alert-stat-icon">
-                                <AlertTriangle size={22} />
+                                <Info size={20} />
                             </div>
                             <div>
                                 <strong>{counts.low}</strong>
@@ -640,11 +702,11 @@ function Alerts({ onNavigate }) {
 
                         <button
                             type="button"
-                            className="alert-stat-card total"
-                            onClick={clearFilters}
+                            className={`alert-stat-card total ${selectedCategory === "ALL" ? "selected" : ""}`}
+                            onClick={() => handleCategoryChange("ALL")}
                         >
                             <div className="alert-stat-icon">
-                                <AlertTriangle size={22} />
+                                <Waves size={20} />
                             </div>
                             <div>
                                 <strong>{counts.total}</strong>
@@ -654,176 +716,177 @@ function Alerts({ onNavigate }) {
                         </button>
                     </div>
 
+                    {/* TOP GRID: MAP & RECENT ALERTS (DYNAMICALLY INTERCONNECTED) */}
                     <div className="alerts-top-grid">
                         <section className="panel map-panel">
                             <div className="panel-heading">
                                 <h2>Active Alert Map</h2>
+
+                                {/* Clean header-embedded legend filters */}
+                                <div className="map-legend-bar">
+                                    <button
+                                        type="button"
+                                        className={selectedCategory === "ALL" ? "active" : ""}
+                                        onClick={() => handleCategoryChange("ALL")}
+                                    >
+                                        All
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={selectedCategory === "CRITICAL" ? "active" : ""}
+                                        onClick={() => handleCategoryChange("CRITICAL")}
+                                    >
+                                        <span className="dot dot-critical"></span> Critical
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={selectedCategory === "HIGH" ? "active" : ""}
+                                        onClick={() => handleCategoryChange("HIGH")}
+                                    >
+                                        <span className="dot dot-high"></span> High
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={selectedCategory === "MODERATE" ? "active" : ""}
+                                        onClick={() => handleCategoryChange("MODERATE")}
+                                    >
+                                        <span className="dot dot-moderate"></span> Moderate
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={selectedCategory === "LOW" ? "active" : ""}
+                                        onClick={() => handleCategoryChange("LOW")}
+                                    >
+                                        <span className="dot dot-low"></span> Low
+                                    </button>
+                                </div>
                             </div>
 
-                            <div className="alert-map alert-leaflet-map">
-
+                            <div className="alert-map">
                                 <MapContainer
-                                    center={[30.372, 78.492]}
-                                    zoom={9}
+                                    center={mapCenter}
+                                    zoom={mapZoom}
                                     scrollWheelZoom={true}
                                     className="alerts-leaflet-container"
                                 >
-                                    <FixMapSize />
+                                    <MapController center={mapCenter} zoom={mapZoom} />
 
                                     <TileLayer
                                         attribution="&copy; OpenStreetMap contributors"
                                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                        className="alerts-map-tiles"
-                                        opacity={1}
-                                        zIndex={1}
-                                        tileSize={256}
-                                        zoomOffset={0}
-                                        updateWhenIdle={false}
-                                        keepBuffer={4}
                                     />
 
                                     {mapMarkers.map((alert) => {
-                                        const positions = {
-                                            "Selected District": [30.372, 78.492],
-                                            Rudraprayag: [30.284, 78.981],
-                                            Chamoli: [30.404, 79.322],
-                                            "Pauri Garhwal": [30.15, 78.78],
-                                            Uttarkashi: [30.7268, 78.4354],
-                                            Haridwar: [29.9457, 78.1642],
-                                            Nainital: [29.3919, 79.4542],
-                                            Dehradun: [30.3165, 78.0322],
-                                            Almora: [29.5892, 79.6467],
-                                        };
-
+                                        const colors = getMarkerColor(alert.risk);
                                         return (
-                                            <Marker
+                                            <CircleMarker
                                                 key={alert.id}
-                                                position={
-                                                    positions[alert.location] || [30.372, 78.492]
-                                                }
+                                                center={[alert.lat || 30.372, alert.lng || 78.492]}
+                                                radius={alert.risk === "CRITICAL" ? 11 : alert.risk === "HIGH" ? 9 : 7}
+                                                pathOptions={{
+                                                    color: colors.stroke,
+                                                    fillColor: colors.fill,
+                                                    fillOpacity: 0.85,
+                                                    weight: 2,
+                                                }}
+                                                eventHandlers={{
+                                                    click: () => handleAlertSelect(alert),
+                                                }}
                                             >
                                                 <Popup>
-                                                    <strong>{alert.location}</strong>
-                                                    <br />
-                                                    Risk: {alert.risk}
-                                                    <br />
-                                                    Probability: {alert.probability}%
-                                                    <br />
-                                                    {alert.type}
+                                                    <div className="map-bubble">
+                                                        <strong>{alert.location}</strong>
+                                                        <div className="bubble-type">{alert.type}</div>
+                                                        <div className="bubble-meta">
+                                                            Risk Tier: <b>{alert.risk}</b> ({alert.probability}%)
+                                                        </div>
+                                                        <p className="bubble-desc">{alert.description}</p>
+                                                        <button
+                                                            type="button"
+                                                            className="bubble-btn"
+                                                            onClick={() => handleAlertSelect(alert)}
+                                                        >
+                                                            Inspect Details
+                                                        </button>
+                                                    </div>
                                                 </Popup>
-                                            </Marker>
+                                            </CircleMarker>
                                         );
                                     })}
                                 </MapContainer>
 
-                                {/* Risk Legend */}
-                                <div className="map-legend">
-                                    <button
-                                        className={mapMode === "CRITICAL" ? "active" : ""}
-                                        onClick={() => setMapMode("CRITICAL")}
-                                        type="button"
-                                    >
-                                        <i className="legend-dot critical-dot"></i>
-                                        Critical
-                                    </button>
-
-                                    <button
-                                        className={mapMode === "HIGH" ? "active" : ""}
-                                        onClick={() => setMapMode("HIGH")}
-                                        type="button"
-                                    >
-                                        <i className="legend-dot high-dot"></i>
-                                        High
-                                    </button>
-
-                                    <button
-                                        className={mapMode === "MODERATE" ? "active" : ""}
-                                        onClick={() => setMapMode("MODERATE")}
-                                        type="button"
-                                    >
-                                        <i className="legend-dot moderate-dot"></i>
-                                        Moderate
-                                    </button>
-
-                                    <button
-                                        className={mapMode === "LOW" ? "active" : ""}
-                                        onClick={() => setMapMode("LOW")}
-                                        type="button"
-                                    >
-                                        <i className="legend-dot low-dot"></i>
-                                        Low
-                                    </button>
-
-                                    <button
-                                        className={mapMode === "All" ? "active" : ""}
-                                        onClick={() => setMapMode("All")}
-                                        type="button"
-                                    >
-                                        All
-                                    </button>
-                                </div>
-
                                 <div className="map-location-note">
                                     <Info size={13} />
-                                    Click on a marker to view alert details
+                                    Click any marker circle to inspect live river basin telemetry
                                 </div>
-
                             </div>
                         </section>
 
+                        {/* RECENT ALERTS PANEL (DYNAMICALLY UPDATED ON TOUCH) */}
                         <section className="panel critical-panel">
                             <div className="panel-heading">
-                                <h2>Recent Critical Alerts</h2>
+                                <h2>{categoryMeta.title}</h2>
                                 <button
                                     type="button"
                                     className="view-all-link"
                                     onClick={() => {
-                                        setRisk("CRITICAL");
-                                        setPage(1);
+                                        const el = document.getElementById("all-alerts-table");
+                                        if (el) el.scrollIntoView({ behavior: "smooth" });
                                     }}
                                 >
-                                    View All <ArrowRight size={15} />
+                                    View All <ArrowRight size={14} />
                                 </button>
                             </div>
 
                             <div className="critical-list">
-                                {recentCritical.map((alert) => (
-                                    <button
-                                        key={alert.id}
-                                        type="button"
-                                        className="critical-item"
-                                        onClick={() => setSelectedAlert(alert)}
-                                    >
-                                        <div className="critical-icon">
-                                            <AlertTriangle size={17} />
-                                        </div>
-                                        <div className="critical-copy">
-                                            <strong>{alert.location}</strong>
-                                            <p>{alert.description}</p>
-                                        </div>
-                                        <div className="critical-time">
-                                            <strong>{alert.triggered.split(", ")[1]}</strong>
-                                            <span>30 Aug 2026</span>
-                                        </div>
-                                    </button>
-                                ))}
+                                {categoryAlerts.length > 0 ? (
+                                    categoryAlerts.map((alert) => (
+                                        <button
+                                            key={alert.id}
+                                            type="button"
+                                            className={`critical-item ${alert.risk.toLowerCase()}`}
+                                            onClick={() => handleAlertSelect(alert)}
+                                            title="Click to view details and inspect on map"
+                                        >
+                                            <div className={`critical-icon ${alert.risk.toLowerCase()}`}>
+                                                {alert.risk === "CRITICAL" && <AlertTriangle size={18} />}
+                                                {alert.risk === "HIGH" && <AlertTriangle size={18} />}
+                                                {alert.risk === "MODERATE" && <CloudRain size={18} />}
+                                                {alert.risk === "LOW" && <Info size={18} />}
+                                            </div>
+                                            <div className="critical-copy">
+                                                <strong>{alert.location}</strong>
+                                                <p>{alert.description}</p>
+                                            </div>
+                                            <div className={`critical-time ${alert.risk.toLowerCase()}`}>
+                                                <strong>{alert.probability}%</strong>
+                                                <span>Risk</span>
+                                            </div>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="critical-empty-state">
+                                        <p>No active {selectedCategory.toLowerCase()} alerts at this time.</p>
+                                    </div>
+                                )}
                             </div>
 
                             <button
                                 type="button"
-                                className="critical-footer"
+                                className={`critical-footer ${categoryMeta.type}`}
                                 onClick={() => {
-                                    setRisk("CRITICAL");
-                                    setPage(1);
+                                    const el = document.getElementById("all-alerts-table");
+                                    if (el) el.scrollIntoView({ behavior: "smooth" });
                                 }}
                             >
-                                <span>3 Critical Alerts Active</span>
-                                <ArrowRight size={17} />
+                                <span>{categoryMeta.countText}</span>
+                                <ArrowRight size={15} />
                             </button>
                         </section>
                     </div>
 
-                    <section className="panel all-alerts-panel">
+                    {/* ALL ACTIVE ALERTS TABLE */}
+                    <section id="all-alerts-table" className="panel all-alerts-panel">
                         <div className="all-alerts-toolbar">
                             <div>
                                 <h2>All Active Alerts</h2>
@@ -845,8 +908,8 @@ function Alerts({ onNavigate }) {
                                 <select
                                     value={risk}
                                     onChange={(e) => {
-                                        setRisk(e.target.value);
-                                        setPage(1);
+                                        const val = e.target.value;
+                                        handleCategoryChange(val === "All Risk Levels" ? "ALL" : val);
                                     }}
                                 >
                                     {RISK_LEVELS.map((value) => (
@@ -871,7 +934,7 @@ function Alerts({ onNavigate }) {
                                     className={`filter-button ${filterOpen ? "active" : ""}`}
                                     onClick={() => setFilterOpen((v) => !v)}
                                 >
-                                    <SlidersHorizontal size={15} />
+                                    <SlidersHorizontal size={14} />
                                     Filter
                                 </button>
                             </div>
@@ -907,56 +970,53 @@ function Alerts({ onNavigate }) {
                                     <tr>
                                         <th>Alert ID</th>
                                         <th>Location</th>
-                                        <th>District</th>
                                         <th>Risk Level</th>
-                                        <th>Alert Type</th>
-                                        <th>Triggered At</th>
+                                        <th>Type</th>
+                                        <th>Triggered</th>
                                         <th>Valid Until</th>
                                         <th>Probability</th>
                                         <th>Status</th>
-                                        <th>Action</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
                                     {visibleAlerts.length === 0 ? (
                                         <tr>
-                                            <td colSpan="10" className="empty-state">
-                                                No alerts match the selected filters.
+                                            <td colSpan="9" className="empty-state">
+                                                No alerts match the current filter criteria.
                                             </td>
                                         </tr>
                                     ) : (
                                         visibleAlerts.map((alert) => (
                                             <tr key={alert.id}>
-                                                <td>{alert.id}</td>
+                                                <td className="alert-id-cell">{alert.id}</td>
                                                 <td>
                                                     <div className="location-cell">
-                                                        <MapPin size={12} />
-                                                        {alert.location}
+                                                        <MapPin size={13} />
+                                                        <strong>{alert.location}</strong>
                                                     </div>
                                                 </td>
-                                                <td>{alert.district}</td>
                                                 <td>
-                                                    <span className={`risk-pill ${riskClass(alert.risk)}`}>
-                                                        {getRiskIcon(alert.risk, 11)}
+                                                    <span className={`risk-pill ${alert.risk.toLowerCase()}`}>
                                                         {alert.risk}
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <div className="type-cell">
                                                         {alert.type.includes("River") ? (
-                                                            <Waves size={15} />
-                                                        ) : alert.type.includes("Rainfall") ? (
-                                                            <CloudRain size={15} />
+                                                            <Waves size={13} />
                                                         ) : (
-                                                            <Info size={15} />
+                                                            <CloudRain size={13} />
                                                         )}
-                                                        {alert.type}
+                                                        <span>{alert.type}</span>
                                                     </div>
                                                 </td>
                                                 <td>{alert.triggered}</td>
                                                 <td>{alert.validUntil}</td>
-                                                <td className="probability-cell">{alert.probability}%</td>
+                                                <td className="probability-cell">
+                                                    {alert.probability}%
+                                                </td>
                                                 <td>
                                                     <span className="status-active">
                                                         <i></i>
@@ -967,7 +1027,7 @@ function Alerts({ onNavigate }) {
                                                     <button
                                                         className="view-details-button"
                                                         type="button"
-                                                        onClick={() => setSelectedAlert(alert)}
+                                                        onClick={() => handleAlertSelect(alert)}
                                                     >
                                                         View Details
                                                     </button>
@@ -979,10 +1039,10 @@ function Alerts({ onNavigate }) {
                             </table>
                         </div>
 
+                        {/* PAGINATION */}
                         <div className="pagination-row">
-                            <span className="pagination-summary">
-                                Showing{" "}
-                                {filteredAlerts.length === 0 ? 0 : (page - 1) * rowsPerPage + 1} to{" "}
+                            <span>
+                                Showing {filteredAlerts.length === 0 ? 0 : (page - 1) * rowsPerPage + 1} to{" "}
                                 {Math.min(page * rowsPerPage, filteredAlerts.length)} of {counts.total} alerts
                             </span>
 
@@ -992,92 +1052,77 @@ function Alerts({ onNavigate }) {
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                     disabled={page === 1}
                                 >
-                                    <ChevronLeft size={15} />
+                                    <ChevronLeft size={14} />
                                 </button>
 
-                                {[1, 2, 3].map((pageNumber) => (
-                                    <button
-                                        key={pageNumber}
-                                        type="button"
-                                        className={page === pageNumber ? "active" : ""}
-                                        onClick={() => setPage(Math.min(pageNumber, totalPages))}
-                                    >
-                                        {pageNumber}
-                                    </button>
-                                ))}
-
-                                <span className="pagination-dots">...</span>
-
-                                <button
-                                    type="button"
-                                    className={page === totalPages ? "active" : ""}
-                                    onClick={() => setPage(totalPages)}
-                                >
-                                    {Math.min(8, totalPages)}
-                                </button>
+                                {[...Array(totalPages)].map((_, i) => {
+                                    const pNum = i + 1;
+                                    return (
+                                        <button
+                                            key={pNum}
+                                            type="button"
+                                            className={page === pNum ? "active" : ""}
+                                            onClick={() => setPage(pNum)}
+                                        >
+                                            {pNum}
+                                        </button>
+                                    );
+                                })}
 
                                 <button
                                     type="button"
                                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
                                 >
-                                    <ChevronRight size={15} />
+                                    <ChevronRight size={14} />
                                 </button>
                             </div>
 
                             <label className="rows-control">
-                                Rows per page:
+                                Rows:
                                 <select
                                     value={rowsPerPage}
-                                    onChange={(e) => handleRowsPerPage(e.target.value)}
+                                    onChange={(e) => {
+                                        setRowsPerPage(Number(e.target.value));
+                                        setPage(1);
+                                    }}
                                 >
                                     <option value="7">7</option>
                                     <option value="10">10</option>
-                                    <option value="20">20</option>
+                                    <option value="15">15</option>
                                 </select>
                             </label>
                         </div>
                     </section>
                 </section>
 
+                {/* NORMAL DETAILS MODAL */}
                 {selectedAlert && (
                     <div className="alert-modal-overlay" onClick={() => setSelectedAlert(null)}>
-                        <div
-                            className="alert-modal"
-                            onClick={(e) => e.stopPropagation()}
-                        >
+                        <div className="alert-modal" onClick={(e) => e.stopPropagation()}>
                             <div className="alert-modal-header">
                                 <div>
-                                    <span className={`modal-risk-tag ${riskClass(selectedAlert.risk)}`}>
+                                    <span className={`modal-risk-tag ${selectedAlert.risk.toLowerCase()}`}>
                                         {selectedAlert.risk}
                                     </span>
-                                    <h3>{selectedAlert.location}</h3>
+                                    <h3>{selectedAlert.location} — {selectedAlert.type}</h3>
                                 </div>
-
                                 <button type="button" onClick={() => setSelectedAlert(null)}>
-                                    <X size={18} />
+                                    <X size={16} />
                                 </button>
                             </div>
 
                             <div className="modal-grid">
                                 <div>
-                                    <span>Alert ID</span>
-                                    <strong>{selectedAlert.id}</strong>
-                                </div>
-                                <div>
-                                    <span>Alert Type</span>
-                                    <strong>{selectedAlert.type}</strong>
+                                    <span>District</span>
+                                    <strong>{selectedAlert.district}</strong>
                                 </div>
                                 <div>
                                     <span>Probability</span>
                                     <strong>{selectedAlert.probability}%</strong>
                                 </div>
                                 <div>
-                                    <span>Status</span>
-                                    <strong>{selectedAlert.status}</strong>
-                                </div>
-                                <div>
-                                    <span>Triggered At</span>
+                                    <span>Triggered</span>
                                     <strong>{selectedAlert.triggered}</strong>
                                 </div>
                                 <div>
@@ -1087,16 +1132,26 @@ function Alerts({ onNavigate }) {
                             </div>
 
                             <div className="modal-description">
-                                <h4>Alert Details</h4>
+                                <h4>Description</h4>
                                 <p>{selectedAlert.description}</p>
                             </div>
 
                             <div className="modal-impact">
                                 <AlertTriangle size={16} />
                                 <div>
-                                    <strong>{selectedAlert.impact}</strong>
-                                    <span>Follow the latest official local authority guidance.</span>
+                                    <strong>Recommended Action</strong>
+                                    <span>{selectedAlert.impact}</span>
                                 </div>
+                            </div>
+
+                            <div className="modal-footer-strip">
+                                <button
+                                    type="button"
+                                    className="modal-close-action"
+                                    onClick={() => setSelectedAlert(null)}
+                                >
+                                    Close
+                                </button>
                             </div>
                         </div>
                     </div>

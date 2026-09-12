@@ -690,6 +690,7 @@ function WeatherData({ onNavigate }) {
         terrain,
         history,
         alerts,
+        activeAlertCount,
         lastUpdate,
         apiOnline,
         refreshData,
@@ -989,6 +990,7 @@ function WeatherData({ onNavigate }) {
             <Sidebar
                 activePage="weather"
                 onNavigate={handleNavigation}
+                alertCount={activeAlertCount}
             />
 
 
@@ -1064,9 +1066,11 @@ function WeatherData({ onNavigate }) {
                                     size={17}
                                 />
 
-                                <span>
-                                    {alerts && alerts.length > 0 ? alerts.length : 2}
-                                </span>
+                                {activeAlertCount > 0 && (
+                                    <span>
+                                        {activeAlertCount}
+                                    </span>
+                                )}
 
                             </button>
 

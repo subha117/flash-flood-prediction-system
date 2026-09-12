@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useContext, useMemo, useState } from "react";
+import { LocationContext } from "../../../context/LocationContext";
 
 import {
     CalendarDays,
@@ -415,6 +416,7 @@ function BarLineChart() {
 function HistoricalAnalysis({
     onNavigate,
 }) {
+    const { activeAlertCount } = useContext(LocationContext) || {};
 
     const [timePeriod, setTimePeriod] =
         useState("Custom Range");
@@ -625,6 +627,7 @@ function HistoricalAnalysis({
             <Sidebar
                 activePage="historical"
                 onNavigate={onNavigate}
+                alertCount={activeAlertCount}
             />
 
 
@@ -703,9 +706,11 @@ function HistoricalAnalysis({
                                 size={16}
                             />
 
-                            <span>
-                                3
-                            </span>
+                            {activeAlertCount > 0 && (
+                                <span>
+                                    {activeAlertCount}
+                                </span>
+                            )}
 
                         </button>
 

@@ -103,7 +103,23 @@ def get_predictions_history(db: Session = Depends(get_db)):
 
 @app.get("/api/alerts")
 def get_alerts(db: Session = Depends(get_db)):
-    return db.query(Alert).filter(Alert.resolved == False).order_by(Alert.timestamp.desc()).all()
+    alerts = db.query(Alert).filter(Alert.resolved == False).order_by(Alert.timestamp.desc()).all()
+    if not alerts:
+        default_alert = Alert(
+            location_name="Tehri",
+            latitude=30.372,
+            longitude=78.492,
+            risk_level="CRITICAL",
+            probability=0.92,
+            reason="Extreme precipitation detected in upper catchment. Dangerous hydrological runoff imminent in low-lying riverbanks.",
+            data_source="SYSTEM_SIMULATION",
+            resolved=False
+        )
+        db.add(default_alert)
+        db.commit()
+        db.refresh(default_alert)
+        alerts = [default_alert]
+    return alerts
 
 # Legacy compat
 from pydantic import BaseModel
@@ -130,6 +146,35 @@ def broadcast_alert(req: BroadcastRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(alert)
     return alert
+
+from typing import Optional
+from app.services.email_service import send_critical_flood_alert
+
+class EmailAlertRequest(BaseModel):
+    email: str
+    user_name: str = "Resident"
+    location_name: str
+    risk_level: str = "CRITICAL"
+    flood_probability: float = 0.85
+    rainfall_24h: float = 120.0
+    alert_id: str = "ALT-2026-0007"
+    reason: Optional[str] = None
+    force: bool = False
+
+@app.post("/api/alerts/notify-critical-email")
+def notify_critical_email(req: EmailAlertRequest):
+    result = send_critical_flood_alert(
+        recipient_email=req.email,
+        user_name=req.user_name,
+        location_name=req.location_name,
+        risk_level=req.risk_level,
+        flood_probability=req.flood_probability,
+        rainfall_24h=req.rainfall_24h,
+        alert_id=req.alert_id,
+        reason=req.reason,
+        force=req.force,
+    )
+    return result
 
 class LegacyPredictRequest(BaseModel):
     rainfall_mm_hr: float

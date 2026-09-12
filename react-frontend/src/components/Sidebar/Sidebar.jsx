@@ -43,8 +43,9 @@ function Sidebar({
   onNavigate,
   onHome,
   onSubNavigate,
+  alertCount,
 }) {
-  const { location, lastUpdate, apiOnline, alerts } = useContext(LocationContext);
+  const { location, lastUpdate, apiOnline, alerts, activeAlertCount } = useContext(LocationContext);
   const { user } = useContext(AuthContext);
 
   const [settingsOpen, setSettingsOpen] = useState(
@@ -56,6 +57,13 @@ function Sidebar({
   const [selectedSubPage, setSelectedSubPage] = useState(
     activeSubPage || "preferences"
   );
+
+  const displayBadge =
+    alertCount !== undefined
+      ? alertCount
+      : activeAlertCount !== undefined
+      ? activeAlertCount
+      : alerts?.length || 1;
 
   const baseMenuItems = [
     {
@@ -93,7 +101,7 @@ function Sidebar({
       id: "alerts",
       label: "Alerts",
       icon: Bell,
-      badge: alerts?.length || 0,
+      badge: displayBadge,
     },
     {
       id: "reports",

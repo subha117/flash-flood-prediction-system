@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }) => {
     setToken(data.access_token);
     localStorage.setItem('token', data.access_token);
     localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('user_email', email);
     await fetchUser(data.access_token);
     return data;
   };
