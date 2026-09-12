@@ -7,7 +7,7 @@ import "./Navbar.css";
 
 const API_URL = "http://127.0.0.1:8000/api";
 
-function Navbar({ title, subtitle }) {
+function Navbar({ title, subtitle, children }) {
   const { updateLocation, alerts } = useContext(LocationContext);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -66,6 +66,7 @@ function Navbar({ title, subtitle }) {
       </div>
 
       <div className="navbar-right">
+        {children}
         <form className="navbar-search" onSubmit={handleSearch} ref={dropdownRef}>
           <Search size={16} />
           <input
@@ -141,6 +142,9 @@ function Navbar({ title, subtitle }) {
           
           {profileDropdownOpen && (
             <div className="navbar-dropdown">
+              <button onClick={() => { setProfileDropdownOpen(false); navigate('/profile'); }}>
+                My Profile
+              </button>
               <button onClick={() => { setProfileDropdownOpen(false); navigate('/settings'); }}>
                 Settings
               </button>

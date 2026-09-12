@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import Sidebar from "../../../components/Sidebar/Sidebar";
+import Navbar from "../../../components/Navbar/Navbar";
 
 import "./HistoricalAnalysis.css";
 
@@ -643,151 +644,24 @@ function HistoricalAnalysis({
             HEADER
         =================================================== */}
 
-                <header className="historical-header">
+                <Navbar 
+        title="Historical Analysis" 
+        subtitle="Analyze past flood events, rainfall patterns and model performance over time."
+    >
+        <div style={{ display: 'flex', gap: '12px', marginRight: '16px' }}>
 
-                    <div className="historical-title">
-
-                        <h1>
-                            Historical Analysis
-                        </h1>
-
-                        <p>
-                            Analyze past flood events, rainfall patterns
-                            and model performance over time.
-                        </p>
-
-                    </div>
-
-
-                    <div className="historical-header-actions">
-
-                        <button
-                            className="header-date-range"
-                            type="button"
-                        >
-
-                            <CalendarDays
-                                size={14}
-                            />
-
-                            <span>
-                                24 Aug 2021 - 30 Aug 2026
-                            </span>
-
-                            <ChevronDown
-                                size={13}
-                            />
-
-                        </button>
-
-
-                        <button
-                            className="export-report-button"
-                            type="button"
-                            onClick={handleExport}
-                        >
-
-                            <Download
-                                size={14}
-                            />
-
-                            {exporting
-                                ? "Exporting..."
-                                : "Export Report"}
-
-                        </button>
-
-
-                        <button
-                            className="history-notification"
-                            type="button"
-                        >
-
-                            <Bell
-                                size={16}
-                            />
-
-                            {activeAlertCount > 0 && (
-                                <span>
-                                    {activeAlertCount}
-                                </span>
-                            )}
-
-                        </button>
-
-
-                        <button
-                            className="history-profile"
-                            type="button"
-                            onClick={() =>
-                                setMenuOpen(
-                                    (value) => !value
-                                )
-                            }
-                        >
-
-                            <div className="history-avatar">
-                                <User
-                                    size={15}
-                                />
-                            </div>
-
-                            <div>
-
-                                <strong>
-                                    Souvik Konar
-                                </strong>
-
-                                <span>
-                                    Admin
-                                </span>
-
-                            </div>
-
-                            <ChevronDown
-                                size={12}
-                            />
-
-                        </button>
-
-
-                        {menuOpen && (
-
-                            <div className="history-profile-menu">
-
-                                <button type="button">
-                                    <User size={13} />
-                                    My Profile
-                                </button>
-
-                                <button type="button">
-                                    Settings
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="logout"
-                                    onClick={() => {
-
-                                        localStorage.removeItem(
-                                            "isLoggedIn"
-                                        );
-
-                                        window.location.href =
-                                            "/";
-
-                                    }}
-                                >
-                                    Logout
-                                </button>
-
-                            </div>
-
-                        )}
-
-                    </div>
-
-                </header>
+            <button className="header-date-range" type="button" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.85rem', color: '#1e293b', cursor: 'pointer' }}>
+                <CalendarDays size={14} />
+                <span>24 Aug 2021 - 30 Aug 2026</span>
+                <ChevronDown size={13} />
+            </button>
+            <button className="export-report-button" type="button" onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#0f172a', border: 'none', borderRadius: '8px', fontSize: '0.85rem', color: 'white', cursor: 'pointer' }}>
+                <Download size={14} />
+                {exporting ? "Exporting..." : "Export Report"}
+            </button>
+    
+        </div>
+    </Navbar>
 
 
                 {/* ===================================================

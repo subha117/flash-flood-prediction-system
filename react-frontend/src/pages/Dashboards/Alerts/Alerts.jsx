@@ -27,6 +27,7 @@ import {
 import "leaflet/dist/leaflet.css";
 
 import Sidebar from "../../../components/Sidebar/Sidebar";
+import Navbar from "../../../components/Navbar/Navbar";
 import { AuthContext } from "../../../context/AuthContext";
 import { LocationContext } from "../../../context/LocationContext";
 import "./Alerts.css";
@@ -534,87 +535,10 @@ function Alerts({ onNavigate }) {
 
             <main className="alerts-main">
                 {/* NORMAL TOP HEADER */}
-                <header className="alerts-header">
-                    <div className="alerts-title">
-                        <h1>Alerts</h1>
-                        <p>Real-time flash flood alerts and notifications</p>
-                    </div>
-
-                    <div className="alerts-header-actions">
-                        <div className="alerts-search">
-                            <input
-                                value={search}
-                                onChange={(e) => {
-                                    setSearch(e.target.value);
-                                    setPage(1);
-                                }}
-                                placeholder="Search location..."
-                                type="text"
-                            />
-                            <Search size={17} />
-                        </div>
-
-                        <div className="alert-header-icon-wrap">
-                            <button
-                                className="alert-header-icon"
-                                type="button"
-                                onClick={() => {
-                                    setNotificationsOpen((v) => !v);
-                                    setProfileOpen(false);
-                                }}
-                            >
-                                <Bell size={20} />
-                                {effectiveAlertCount > 0 && <span>{effectiveAlertCount}</span>}
-                            </button>
-
-                            {notificationsOpen && (
-                                <div className="mini-dropdown notification-dropdown">
-                                    <strong>Active Alerts</strong>
-                                    <p>{effectiveAlertCount} active alert{effectiveAlertCount === 1 ? "" : "s"} require attention.</p>
-                                    <p>{counts.high} high-risk warnings are active.</p>
-                                    <button
-                                        type="button"
-                                        onClick={() => setNotificationsOpen(false)}
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="alert-profile-wrap">
-                            <button
-                                className="alert-profile"
-                                type="button"
-                                onClick={() => {
-                                    setProfileOpen((v) => !v);
-                                    setNotificationsOpen(false);
-                                }}
-                            >
-                                <div className="alert-avatar">{userInitials}</div>
-                                <div className="alert-profile-text">
-                                    <strong>{userDisplayName}</strong>
-                                    <span>{userDisplayRole}</span>
-                                </div>
-                                <ChevronDown size={14} />
-                            </button>
-
-                            {profileOpen && (
-                                <div className="mini-dropdown profile-dropdown">
-                                    <button type="button">My Profile</button>
-                                    <button type="button">Settings</button>
-                                    <button
-                                        type="button"
-                                        className="logout-btn"
-                                        onClick={handleLogout}
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </header>
+                <Navbar 
+        title="Alerts" 
+        subtitle="Real-time flash flood alerts and notifications"
+    />
 
                 <section className="alerts-content">
                     {/* AUTOMATED EMAIL DISPATCH STATUS BANNER */}

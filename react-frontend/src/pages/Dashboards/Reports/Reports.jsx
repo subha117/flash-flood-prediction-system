@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 
 import Sidebar from "../../../components/Sidebar/Sidebar";
+import Navbar from "../../../components/Navbar/Navbar";
 import "./Reports.css";
 
 const REPORTS_DATA = [
@@ -399,78 +400,23 @@ function Reports({ onNavigate }) {
       <Sidebar activePage="reports" onNavigate={onNavigate} />
 
       <main className="reports-main">
-        <header className="reports-header">
-          <div className="reports-title-wrap">
-            <div className="reports-title-icon">
-              <FileBarChart2 size={22} />
-            </div>
-            <div className="reports-title">
-              <h1>Reports</h1>
-              <p>Generate, review and export flash flood monitoring reports.</p>
-            </div>
-          </div>
+        <Navbar 
+        title="Reports" 
+        subtitle="Generate, review and export flash flood monitoring reports."
+    >
+        <div style={{ display: 'flex', gap: '12px', marginRight: '16px' }}>
 
-          <div className="reports-header-actions">
-            <button className="header-action-btn" type="button" onClick={handleExportCurrent}>
+            <button className="header-action-btn" type="button" onClick={handleExportCurrent} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.85rem', color: '#1e293b', cursor: 'pointer' }}>
               <Download size={15} />
               Export Data
             </button>
-            <button className="header-action-btn primary" type="button" onClick={() => setShowGenerator(true)}>
+            <button className="header-action-btn primary" type="button" onClick={() => setShowGenerator(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#0ea5e9', border: 'none', borderRadius: '8px', fontSize: '0.85rem', color: 'white', cursor: 'pointer' }}>
               <Plus size={15} />
               Generate Report
             </button>
-
-            <div className="report-header-relative">
-              <button
-                type="button"
-                className="header-icon-btn"
-                onClick={() => {
-                  setNotificationsOpen((v) => !v);
-                  setProfileOpen(false);
-                }}
-              >
-                <Bell size={18} />
-                <span>4</span>
-              </button>
-              {notificationsOpen && (
-                <div className="reports-dropdown notification-dropdown">
-                  <strong>Notifications</strong>
-                  <p>4 reports are ready to download.</p>
-                  <p>The weekly risk report was updated 8 minutes ago.</p>
-                  <button type="button" onClick={() => setNotificationsOpen(false)}>
-                    Close
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="report-header-relative">
-              <button
-                type="button"
-                className="report-profile-btn"
-                onClick={() => {
-                  setProfileOpen((v) => !v);
-                  setNotificationsOpen(false);
-                }}
-              >
-                <div className="report-avatar">SK</div>
-                <div className="report-profile-copy">
-                  <strong>Souvik Konar</strong>
-                  <span>Admin</span>
-                </div>
-                <ChevronDown size={14} />
-              </button>
-
-              {profileOpen && (
-                <div className="reports-dropdown profile-dropdown">
-                  <button type="button"><User size={14} /> My Profile</button>
-                  <button type="button"><Settings size={14} /> Settings</button>
-                  <button type="button" className="logout" onClick={handleLogout}>Logout</button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
+    
+        </div>
+    </Navbar>
 
         <section className="reports-content">
           {generatedNotice && (

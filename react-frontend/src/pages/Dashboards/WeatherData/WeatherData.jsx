@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 
 import Sidebar from "../../../components/Sidebar/Sidebar";
+import Navbar from "../../../components/Navbar/Navbar";
 
 import "./WeatherData.css";
 
@@ -1005,236 +1006,19 @@ function WeatherData({ onNavigate }) {
             HEADER
         =================================================== */}
 
-                <header className="weather-header">
-
-
-                    {/* TITLE */}
-
-                    <div className="weather-header-title">
-
-                        <h1>
-                            Weather &amp; Data
-                        </h1>
-
-                        <p>
-                            Monitor real-time weather conditions and data
-                            sources
-                        </p>
-
-                    </div>
-
-
-                    {/* RIGHT SIDE */}
-
-                    <div className="weather-header-right">
-
-
-                        {/* REFRESH */}
-
-                        <button
-                            className="weather-refresh-button"
-                            type="button"
-                            onClick={handleRefresh}
-                            disabled={isRefreshing || contextLoading}
-                        >
-
-                            <RefreshCw
-                                size={15}
-                                className={isRefreshing || contextLoading ? "spin-animation" : ""}
-                            />
-
-                            {isRefreshing || contextLoading ? "Refreshing..." : "Refresh Data"}
-
-                        </button>
-
-
-                        {/* NOTIFICATION */}
-
-                        <div className="header-menu-wrapper">
-
-                            <button
-                                className="weather-notification"
-                                type="button"
-                                onClick={() =>
-                                    setShowNotifications(
-                                        (value) => !value
-                                    )
-                                }
-                            >
-
-                                <Bell
-                                    size={17}
-                                />
-
-                                {activeAlertCount > 0 && (
-                                    <span>
-                                        {activeAlertCount}
-                                    </span>
-                                )}
-
-                            </button>
-
-
-                            {showNotifications && (
-
-                                <div className="header-dropdown notification-dropdown">
-
-                                    <div className="dropdown-title">
-                                        Notifications
-                                    </div>
-
-                                    {alerts && alerts.length > 0 ? (
-                                        alerts.slice(0, 4).map((alt, idx) => (
-                                            <div className="notification-item" key={idx}>
-                                                <div className="notification-icon warning">
-                                                    <AlertCircle size={15} />
-                                                </div>
-                                                <div>
-                                                    <strong>
-                                                        {alt.reason || `${alt.risk_level} Risk Detected`}
-                                                    </strong>
-                                                    <span>
-                                                        {alt.location_name || currentLocationName}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <>
-                                            <div className="notification-item">
-                                                <div className="notification-icon warning">
-                                                    <AlertCircle size={15} />
-                                                </div>
-                                                <div>
-                                                    <strong>
-                                                        Monitoring Active
-                                                    </strong>
-                                                    <span>
-                                                        {currentLocationName}, {currentRegionName}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="notification-item">
-                                                <div className="notification-icon success">
-                                                    <Check size={15} />
-                                                </div>
-                                                <div>
-                                                    <strong>
-                                                        Weather data synchronized
-                                                    </strong>
-                                                    <span>
-                                                        All feeds online ({isLive ? "Live" : "Standby"})
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </>
-                                    )}
-
-                                </div>
-
-                            )}
-
-                        </div>
-
-
-                        {/* PROFILE */}
-
-                        <div className="header-menu-wrapper">
-
-                            <button
-                                className="weather-profile"
-                                type="button"
-                                onClick={() =>
-                                    setShowProfile(
-                                        (value) => !value
-                                    )
-                                }
-                            >
-
-                                <div className="weather-profile-avatar">
-
-                                    <User
-                                        size={18}
-                                    />
-
-                                </div>
-
-                                <div className="weather-profile-details">
-
-                                    <strong>
-                                        {user?.name || "Souvik Konar"}
-                                    </strong>
-
-                                    <span>
-                                        {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Admin"}
-                                    </span>
-
-                                </div>
-
-                                <ChevronDown
-                                    size={13}
-                                />
-
-                            </button>
-
-
-                            {showProfile && (
-
-                                <div className="header-dropdown profile-dropdown">
-
-                                    <button type="button">
-
-                                        <User
-                                            size={14}
-                                        />
-
-                                        My Profile
-
-                                    </button>
-
-
-                                    <button type="button">
-
-                                        <Settings
-                                            size={14}
-                                        />
-
-                                        Settings
-
-                                    </button>
-
-
-                                    <button
-                                        type="button"
-                                        className="logout-item"
-                                        onClick={() => {
-
-                                            localStorage.removeItem(
-                                                "isLoggedIn"
-                                            );
-
-                                            window.location.href = "/";
-
-                                        }}
-                                    >
-
-                                        <LogOut
-                                            size={14}
-                                        />
-
-                                        Logout
-
-                                    </button>
-
-                                </div>
-
-                            )}
-
-                        </div>
-
-                    </div>
-
-                </header>
+                <Navbar 
+        title="Weather & Atmospheric Data" 
+        subtitle="Real-time meteorological monitoring and precipitation tracking."
+    >
+        <div style={{ display: 'flex', gap: '12px', marginRight: '16px' }}>
+
+            <button className="weather-refresh-button" type="button" onClick={handleRefresh} disabled={isRefreshing || contextLoading} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: '#0ea5e9', border: 'none', borderRadius: '8px', fontSize: '0.85rem', color: 'white', cursor: (isRefreshing || contextLoading) ? 'not-allowed' : 'pointer', opacity: (isRefreshing || contextLoading) ? 0.7 : 1 }}>
+                <RefreshCw size={15} className={isRefreshing || contextLoading ? "spin-animation" : ""} />
+                {isRefreshing || contextLoading ? "Refreshing..." : "Refresh Data"}
+            </button>
+    
+        </div>
+    </Navbar>
 
 
                 {/* ===================================================

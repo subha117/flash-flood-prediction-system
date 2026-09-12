@@ -24,6 +24,7 @@ import HistoricalAnalysis from "./pages/Dashboards/HistoricalAnalysis/Historical
 import Alerts from "./pages/Dashboards/Alerts/Alerts";
 import Reports from "./pages/Dashboards/Reports/Reports";
 import Settings from "./pages/Dashboards/Settings/Settings";
+import Profile from "./pages/Dashboards/Profile/Profile";
 
 /* =========================================================
    PROTECTED ROUTE
@@ -73,6 +74,7 @@ function AppRoutes() {
       alerts: "/alerts",
       reports: "/reports",
       settings: "/settings",
+      profile: "/profile",
     };
 
     if (routes[page]) navigate(routes[page]);
@@ -106,6 +108,7 @@ function AppRoutes() {
       <Route path="/alerts" element={<ProtectedRoute><Alerts onNavigate={handleNavigate} onHome={() => navigate("/dashboard")} /></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><Reports onNavigate={handleNavigate} onHome={() => navigate("/dashboard")} /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings onNavigate={handleNavigate} onHome={() => navigate("/dashboard")} /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile onNavigate={handleNavigate} /></ProtectedRoute>} />
     </Routes>
   );
 }

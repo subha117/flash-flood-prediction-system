@@ -13,17 +13,26 @@
 }
 
 .prediction-main-area {
+  height: 100vh !important;
+  overflow-y: auto !important;
+
   flex: 1;
   margin-left: 248px;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  
+  
+  overflow-x: hidden;
 }
 
 .prediction-page-container {
   padding: 22px 28px;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   gap: 20px;
   max-width: 1440px;
   box-sizing: border-box;
@@ -256,6 +265,9 @@
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   justify-content: space-between;
   min-height: 58px;
 }
@@ -368,6 +380,9 @@
 .pred-score-col {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   align-items: flex-start;
 }
 
@@ -420,6 +435,9 @@
 .pred-gauge-col {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   align-items: center;
 }
 
@@ -518,6 +536,9 @@
 .pred-factor-bars-list {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   gap: 10px;
 }
 
@@ -593,6 +614,9 @@
   margin: 0;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   gap: 8px;
 }
 
@@ -618,6 +642,9 @@
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   justify-content: center;
   transition: all 0.3s ease;
 }

@@ -83,8 +83,11 @@ body,
 }
 
 .historical-main {
+  height: 100vh !important;
+  overflow-y: auto !important;
+
     width: 100% !important;
-    min-height: 100vh !important;
+    
     margin: 0 !important;
     padding: 0 0 32px !important;
     box-sizing: border-box !important;
@@ -103,7 +106,9 @@ body,
 ========================================================= */
 
 .historical-header {
-    position: relative;
+    position: sticky;
+  top: 0;
+  z-index: 100;
     min-height: 74px;
     padding: 14px 28px;
     display: flex;
@@ -1500,6 +1505,9 @@ body,
     }
 
     .historical-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
         height: auto;
         padding: 12px 16px;
         flex-direction: column;
