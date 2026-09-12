@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { indiaStatesAndDistricts } from "../../../utils/indiaStates";
 
 import {
     CalendarDays,
@@ -29,6 +30,8 @@ import "./HistoricalAnalysis.css";
 /* =========================================================
    HISTORICAL EVENT DATA
 ========================================================= */
+
+const API_URL = 'http://127.0.0.1:8000/api';
 
 const historicalEvents = [
     {
@@ -352,7 +355,7 @@ function BarLineChart() {
 
             <div className="bar-area">
 
-                {rainfallChart.map(
+                {dynamicRainfallChart.map(
                     (value, index) => (
 
                         <div
@@ -416,23 +419,54 @@ function HistoricalAnalysis({
     onNavigate,
 }) {
 
-    const [timePeriod, setTimePeriod] =
-        useState("Custom Range");
+    // API States
+    const [apiData, setApiData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [hasData, setHasData] = useState(true);
 
-    const [district, setDistrict] =
-        useState("All Districts");
+    const [timePeriod, setTimePeriod] = useState("Last 1 Year");
+    const [stateFilter, setStateFilter] = useState("All States");
+    const [district, setDistrict] = useState("All Districts");
+    const [eventType, setEventType] = useState("Flood Events");
+    const [riskLevel, setRiskLevel] = useState("All Risk Levels");
+    const [selectedChart, setSelectedChart] = useState("Monthly");
 
-    const [location, setLocation] =
-        useState("All Locations");
+    // Computed Options
+    const timeOptions = ["Last 1 Month", "Last 3 Months", "Last 6 Months", "Last 1 Year", "Last 3 Years", "Last 5 Years", "All Time"];
+    const allStates = ["All States", ...Object.keys(indiaStatesAndDistricts).sort()];
+    const availableDistricts = stateFilter === "All States" ? ["All Districts"] : ["All Districts", ...(indiaStatesAndDistricts[stateFilter] || [])];
 
-    const [eventType, setEventType] =
-        useState("All Events");
+    const fetchHistoricalData = async (time = timePeriod, st = stateFilter, dist = district) => {
+        setLoading(true);
+        try {
+            const url = `${API_URL}/historical/analysis?time_period=${encodeURIComponent(time)}&state=${encodeURIComponent(st)}&district=${encodeURIComponent(dist)}`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.data) {
+                    setApiData(data);
+                    setHasData(true);
+                } else {
+                    setHasData(false);
+                }
+            } else {
+                setHasData(false);
+            }
+        } catch(err) {
+            console.error(err);
+            setHasData(false);
+        }
+        setLoading(false);
+    };
 
-    const [riskLevel, setRiskLevel] =
-        useState("All Levels");
+    useEffect(() => {
+        fetchHistoricalData();
+    }, []);
 
-    const [selectedChart, setSelectedChart] =
-        useState("Monthly");
+    const handleApplyFilters = () => {
+        fetchHistoricalData(timePeriod, stateFilter, district);
+    };
+
 
     const [eventMapFilter, setEventMapFilter] =
         useState("All Events");
@@ -451,55 +485,22 @@ function HistoricalAnalysis({
        FILTERED DATA
     ======================================================= */
 
-    const filteredEvents =
-        useMemo(() => {
-
-            return historicalEvents.filter(
-                (event) => {
-
-                    const matchesDistrict =
-                        district ===
-                        "All Districts" ||
-                        event.district ===
-                        district;
-
-                    const matchesLocation =
-                        location ===
-                        "All Locations" ||
-                        event.location ===
-                        location;
-
-                    const matchesRisk =
-                        riskLevel ===
-                        "All Levels" ||
-                        event.risk ===
-                        riskLevel.toUpperCase();
-
-                    const matchesType =
-                        eventType ===
-                        "All Events" ||
-                        (
-                            eventType ===
-                                "Flood Events"
-                                ? event.actual === "Yes"
-                                : true
-                        );
-
-                    return (
-                        matchesDistrict &&
-                        matchesLocation &&
-                        matchesRisk &&
-                        matchesType
-                    );
-                }
-            );
-
-        }, [
-            district,
-            location,
-            riskLevel,
-            eventType,
-        ]);
+    // --- Data Mapping ---
+    const totalFloodEvents = apiData?.stats?.total_events || 0;
+    const highRiskDays = apiData?.stats?.high_risk_days || 0;
+    const avgRainfall = apiData?.stats?.avg_rainfall || 0;
+    const maxRainfall = apiData?.stats?.max_rainfall || 0;
+    const meanProb = apiData?.stats?.mean_prob || 0;
+    
+    const filteredEvents = apiData?.top_10 || [];
+    const metrics = apiData?.metrics || { accuracy: 81.4, precision: 79.6, recall: 83.2, f1: 81.3 };
+    
+    const dynamicRiskDist = apiData?.risk_distribution || [];
+    const cData = apiData?.chart_data || [];
+    const dynamicRainfallChart = cData.map(d => d.rainfall || 0);
+    const dynamicRainfallFloodLine = cData.map(d => d.floods * 10 || 0);
+    if(dynamicRainfallChart.length === 0) dynamicRainfallChart.push(0);
+    if(dynamicRainfallFloodLine.length === 0) dynamicRainfallFloodLine.push(0);
 
 
     /* =======================================================
@@ -507,19 +508,13 @@ function HistoricalAnalysis({
     ======================================================= */
 
     const handleReset = () => {
-
-        setTimePeriod("Custom Range");
-
+        setStateFilter("All States");
         setDistrict("All Districts");
-
-        setLocation("All Locations");
-
-        setEventType("All Events");
-
-        setRiskLevel("All Levels");
-
+        setTimePeriod("Last 1 Year");
+        setEventType("Flood Events");
+        setRiskLevel("All Risk Levels");
+        fetchHistoricalData("Last 1 Year", "All States", "All Districts");
         setCurrentPage(1);
-
     };
 
 
@@ -796,32 +791,9 @@ function HistoricalAnalysis({
                             Time Period
                         </label>
 
-                        <select
-                            value={timePeriod}
-                            onChange={(e) =>
-                                setTimePeriod(
-                                    e.target.value
-                                )
-                            }
-                        >
-
-                            <option>
-                                Custom Range
-                            </option>
-
-                            <option>
-                                Last 1 Year
-                            </option>
-
-                            <option>
-                                Last 3 Years
-                            </option>
-
-                            <option>
-                                Last 5 Years
-                            </option>
-
-                        </select>
+                        <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)}>
+    {timeOptions.map((opt) => (<option key={opt} value={opt}>{opt}</option>))}
+</select>
 
                     </div>
 
@@ -832,56 +804,9 @@ function HistoricalAnalysis({
                             District
                         </label>
 
-                        <select
-                            value={district}
-                            onChange={(e) => {
-
-                                setDistrict(
-                                    e.target.value
-                                );
-
-                                setCurrentPage(1);
-
-                            }}
-                        >
-
-                            <option>
-                                All Districts
-                            </option>
-
-                            <option>
-                                Tehri Garhwal
-                            </option>
-
-                            <option>
-                                Rudraprayag
-                            </option>
-
-                            <option>
-                                Chamoli
-                            </option>
-
-                            <option>
-                                Pauri Garhwal
-                            </option>
-
-                            <option>
-                                Uttarkashi
-                            </option>
-
-                            <option>
-                                Nainital
-                            </option>
-
-                            <option>
-                                Haridwar
-                            </option>
-
-                            <option>
-                                Almora
-                            </option>
-
-                        </select>
+                        <select value={stateFilter} onChange={(e) => { setStateFilter(e.target.value); setDistrict("All Districts"); }}>
+    {allStates.map(state => (<option key={state} value={state}>{state}</option>))}
+</select>
 
                     </div>
 
@@ -892,56 +817,9 @@ function HistoricalAnalysis({
                             Location
                         </label>
 
-                        <select
-                            value={location}
-                            onChange={(e) => {
-
-                                setLocation(
-                                    e.target.value
-                                );
-
-                                setCurrentPage(1);
-
-                            }}
-                        >
-
-                            <option>
-                                All Locations
-                            </option>
-
-                            <option>
-                                Tehri
-                            </option>
-
-                            <option>
-                                Rudraprayag
-                            </option>
-
-                            <option>
-                                Chamoli
-                            </option>
-
-                            <option>
-                                Pauri Garhwal
-                            </option>
-
-                            <option>
-                                Uttarkashi
-                            </option>
-
-                            <option>
-                                Nainital
-                            </option>
-
-                            <option>
-                                Haridwar
-                            </option>
-
-                            <option>
-                                Almora
-                            </option>
-
-                        </select>
+                        <select value={district} onChange={(e) => setDistrict(e.target.value)}>
+    {availableDistricts.map(dist => (<option key={dist} value={dist}>{dist}</option>))}
+</select>
 
                     </div>
 
@@ -1021,9 +899,10 @@ function HistoricalAnalysis({
                     <button
                         className="apply-filter-button"
                         type="button"
-                        onClick={() =>
-                            setCurrentPage(1)
-                        }
+                        onClick={() => {
+                            setCurrentPage(1);
+                            handleApplyFilters();
+                        }}
                     >
 
                         <SlidersHorizontal
@@ -1035,26 +914,44 @@ function HistoricalAnalysis({
                     </button>
 
 
-                    <button
-                        className="reset-filter-button"
-                        type="button"
-                        onClick={handleReset}
-                    >
-
-                        <RotateCcw
-                            size={13}
-                        />
-
-                        Reset
-
-                    </button>
+                    <button className="reset-filter-button" type="button" onClick={handleReset}><RotateCcw size={13} /> Reset</button>
 
                 </section>
 
 
                 {/* ===================================================
+            LOADING STATE
+        =================================================== */}
+        {loading && (
+            <div className="loading-state" style={{ padding: "100px 20px", textAlign: "center", background: "#fff", borderRadius: "12px", marginTop: "20px", border: "1px solid #e2e8f0" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+                    <div style={{ width: "40px", height: "40px", border: "3px solid #f3f4f6", borderTop: "3px solid #0ea5e9", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                </div>
+                <h3 style={{ fontSize: "18px", color: "#334155" }}>Loading historical analysis...</h3>
+            </div>
+        )}
+
+        {/* ===================================================
+            NO DATA STATE
+        =================================================== */}
+        {!loading && !hasData && (
+            <div className="no-data-state" style={{ padding: '60px 20px', textAlign: 'center', background: '#fff', borderRadius: '12px', marginTop: '20px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+                </div>
+                <h3 style={{ fontSize: '20px', color: '#334155', marginBottom: '8px' }}>No historical data available</h3>
+                <p style={{ color: '#64748b' }}>We couldn't find any historical flood records matching your selected filters.</p>
+                <button onClick={handleReset} style={{ marginTop: '20px', padding: '10px 20px', background: '#03182d', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Clear Filters</button>
+            </div>
+        )}
+
+        {/* ===================================================
             STATS
         =================================================== */}
+        {!loading && hasData && (
+            <>
+
 
                 <section className="historical-stat-grid">
 
@@ -1072,7 +969,7 @@ function HistoricalAnalysis({
                             </span>
 
                             <strong>
-                                198
+                                {totalFloodEvents}
                             </strong>
 
                             <small>
@@ -1097,7 +994,7 @@ function HistoricalAnalysis({
                             </span>
 
                             <strong>
-                                122
+                                {highRiskDays}
                             </strong>
 
                             <small>
@@ -1172,7 +1069,7 @@ function HistoricalAnalysis({
                             </span>
 
                             <strong>
-                                54%
+                                {meanProb}%
                             </strong>
 
                             <small>
@@ -1482,7 +1379,7 @@ function HistoricalAnalysis({
                                     </small>
 
                                     <strong>
-                                        198
+                                        {totalFloodEvents}
                                     </strong>
 
                                     <span>
@@ -1914,7 +1811,7 @@ function HistoricalAnalysis({
                         <span>
                             Showing 1 to{" "}
                             {filteredEvents.length}{" "}
-                            of 198 events
+                            of {totalFloodEvents} events
                         </span>
 
 
@@ -2019,6 +1916,8 @@ function HistoricalAnalysis({
                     </div>
 
                 </section>
+            </>
+        )}
 
             </div>
 
