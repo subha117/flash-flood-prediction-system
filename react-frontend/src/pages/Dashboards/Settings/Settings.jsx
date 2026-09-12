@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../../../components/Sidebar/Sidebar';
 import Navbar from '../../../components/Navbar/Navbar';
 import { AuthContext } from '../../../context/AuthContext';
+import { Camera, Pencil, Save, X, User } from 'lucide-react';
 import './Settings.css';
 
 const API = 'http://127.0.0.1:8000/api';
@@ -25,40 +26,291 @@ const tabs = Object.values(TAB_MAP);
 
 // ─── Profile ────────────────────────────────────────────────────────────────
 const ProfileTab = ({ user, token, onUserUpdate }) => {
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState({ text: '', ok: true });
+  const fileInputRef = useRef(null);
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const [original, setOriginal] = useState({
+    name: '', email: '', phone: '', location: '', role: '', photo: null,
+  });
+  const [form, setForm] = useState({ ...original });
+  const [errors, setErrors] = useState({});
+
+  // load real data
+  useEffect(() => {
+    if (!token) return;
+    const load = async () => {
+      try {
+        const meRes = await fetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+        const meData = meRes.ok ? await meRes.json() : {};
+
+        let settingsData = {};
+        try {
+          const sRes = await fetch(`${API}/settings`, { headers: { Authorization: `Bearer ${token}` } });
+          if (sRes.ok) settingsData = await sRes.json();
+        } catch {}
+
+        const userId = meData.id || user?.id || '0';
+        const extraKey = `app_user_profile_extra_${userId}`;
+        let extras = {};
+        try { extras = JSON.parse(localStorage.getItem(extraKey) || '{}'); } catch {}
+
+        const data = {
+          name: meData.name || '',
+          email: meData.email || '',
+          phone: extras.phone || '',
+          location: settingsData.default_location || '',
+          role: meData.role || 'user',
+          photo: extras.photo || null,
+        };
+        setOriginal(data);
+        setForm({ ...data });
+      } catch (err) { console.error('Failed to load profile:', err); }
+      finally { setLoading(false); }
+    };
+    load();
+  }, [token, user]);
+
+  // auto-hide msg
+  useEffect(() => {
+    if (!msg.text) return;
+    const t = setTimeout(() => setMsg({ text: '', ok: true }), 4000);
+    return () => clearTimeout(t);
+  }, [msg]);
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return parts[0].substring(0, 2).toUpperCase();
+  };
+
+  const formatRole = (role) => {
+    const map = { admin: 'Administrator', gov: 'Government Official', user: 'User' };
+    return map[role] || (role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User');
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!form.name || form.name.trim().length < 2) errs.name = 'Name must be at least 2 characters.';
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Enter a valid email address.';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleEdit = () => { setEditing(true); setErrors({}); setMsg({ text: '', ok: true }); };
+  const handleCancel = () => { setForm({ ...original }); setEditing(false); setErrors({}); };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+    setSaving(true);
     try {
-      const res = await fetch(`${API}/auth/profile`, {
+      const profileRes = await fetch(`${API}/auth/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ name: form.name, email: form.email }),
       });
-      const data = await res.json();
-      if (res.ok) { setMsg({ text: 'Profile updated!', ok: true }); onUserUpdate?.(data); }
-      else setMsg({ text: data.detail || 'Failed to update.', ok: false });
-    } catch { setMsg({ text: 'Network error.', ok: false }); }
+      if (!profileRes.ok) {
+        const d = await profileRes.json().catch(() => ({}));
+        throw new Error(d.detail || 'Failed to update profile.');
+      }
+
+      if (form.location !== original.location) {
+        await fetch(`${API}/settings`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ default_location: form.location }),
+        });
+      }
+
+      const userId = user?.id || '0';
+      const extraKey = `app_user_profile_extra_${userId}`;
+      localStorage.setItem(extraKey, JSON.stringify({ phone: form.phone, photo: form.photo }));
+
+      setOriginal({ ...form });
+      setEditing(false);
+      setMsg({ text: 'Profile updated successfully!', ok: true });
+      onUserUpdate?.({ name: form.name, email: form.email, role: form.role });
+    } catch (err) {
+      setMsg({ text: err.message || 'Failed to save.', ok: false });
+    } finally { setSaving(false); }
   };
+
+  const handlePhotoClick = () => { if (fileInputRef.current) fileInputRef.current.click(); };
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      setForm(p => ({ ...p, photo: dataUrl }));
+      const userId = user?.id || '0';
+      const extraKey = `app_user_profile_extra_${userId}`;
+      let extras = {};
+      try { extras = JSON.parse(localStorage.getItem(extraKey) || '{}'); } catch {}
+      extras.photo = dataUrl;
+      localStorage.setItem(extraKey, JSON.stringify(extras));
+      setOriginal(p => ({ ...p, photo: dataUrl }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const initials = getInitials(form.name || user?.name);
+  const displayRole = formatRole(form.role || user?.role);
+
+  if (loading) {
+    return <div className="tab-pane"><div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading profile…</div></div>;
+  }
 
   return (
     <div className="tab-pane">
-      <h3>Profile Information</h3>
-      {msg.text && <div className={msg.ok ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
-      <form onSubmit={handleSave}>
-        <div className="form-group"><label>Full Name</label>
-          <input type="text" value={name} onChange={e => setName(e.target.value)} required />
+      {/* Page title row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 10, background: '#1768d8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+          <User size={22} />
         </div>
-        <div className="form-group"><label>Email Address</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+        <div>
+          <h3 style={{ margin: 0, borderBottom: 'none', paddingBottom: 0, fontSize: '1.3rem' }}>My Profile</h3>
+          <p style={{ margin: '2px 0 0', fontSize: 13, color: '#64748b' }}>View and manage your personal details.</p>
         </div>
-        <div className="form-group"><label>Role</label>
-          <input type="text" value={user?.role || ''} disabled className="input-disabled" />
+      </div>
+
+      {msg.text && <div className={msg.ok ? 'alert-success' : 'alert-error'} style={{ marginTop: 16 }}>{msg.text}</div>}
+
+      {/* Card */}
+      <div style={{ background: '#fff', border: '1px solid #dfe6ee', borderRadius: 12, padding: '28px 32px', marginTop: 20 }}>
+        {/* Card header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+          <h4 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Personal Details</h4>
+          {!editing ? (
+            <button type="button" onClick={handleEdit} style={{
+              display: 'flex', alignItems: 'center', gap: 7, padding: '8px 18px',
+              border: '1.5px solid #1768d8', borderRadius: 8, background: '#fff',
+              color: '#1768d8', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}>
+              <Pencil size={15} /> Edit Profile
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button type="button" onClick={handleCancel} style={{
+                display: 'flex', alignItems: 'center', gap: 7, padding: '8px 20px',
+                border: '1.5px solid #cbd5e1', borderRadius: 8, background: '#fff',
+                color: '#475569', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}>
+                <X size={15} /> Cancel
+              </button>
+              <button type="button" onClick={handleSave} disabled={saving} style={{
+                display: 'flex', alignItems: 'center', gap: 7, padding: '8px 20px',
+                border: 'none', borderRadius: 8, background: '#1768d8',
+                color: '#fff', fontSize: 13, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer',
+                opacity: saving ? 0.6 : 1,
+              }}>
+                <Save size={15} /> {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          )}
         </div>
-        <button type="submit" className="btn-primary">Save Changes</button>
-      </form>
+
+        {/* Body grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 40, alignItems: 'start' }}>
+          {/* Left: Avatar */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, paddingTop: 10 }}>
+            <div style={{ position: 'relative', width: 160, height: 160 }}>
+              <div style={{
+                width: 160, height: 160, borderRadius: '50%', background: '#334155', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 52, fontWeight: 700, letterSpacing: 2, overflow: 'hidden', userSelect: 'none',
+              }}>
+                {form.photo ? <img src={form.photo} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+              </div>
+              <div onClick={handlePhotoClick} title="Change photo" style={{
+                position: 'absolute', bottom: 6, right: 6, width: 36, height: 36,
+                borderRadius: '50%', background: '#1768d8', color: '#fff',
+                border: '3px solid #fff', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', cursor: 'pointer', zIndex: 2,
+              }}>
+                <Camera size={16} />
+              </div>
+            </div>
+            <button type="button" onClick={handlePhotoClick} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 18px',
+              border: '1.5px solid #1768d8', borderRadius: 8, background: '#fff',
+              color: '#1768d8', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}>
+              <Camera size={14} /> Change Photo
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
+          </div>
+
+          {/* Right: Fields */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Full Name</label>
+              <input type="text" value={form.name} readOnly={!editing}
+                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                style={{
+                  width: '100%', padding: '11px 14px', border: `1px solid ${errors.name ? '#ef4444' : '#dfe6ee'}`,
+                  borderRadius: 8, fontSize: 14, color: '#1e293b',
+                  background: editing ? '#fff' : '#f8fafc', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+              {errors.name && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }}>{errors.name}</div>}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Email Address</label>
+              <input type="email" value={form.email} readOnly={!editing}
+                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                style={{
+                  width: '100%', padding: '11px 14px', border: `1px solid ${errors.email ? '#ef4444' : '#dfe6ee'}`,
+                  borderRadius: 8, fontSize: 14, color: '#1e293b',
+                  background: editing ? '#fff' : '#f8fafc', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+              {errors.email && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }}>{errors.email}</div>}
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Phone Number</label>
+              <input type="tel" value={form.phone} readOnly={!editing}
+                placeholder={editing ? '+91 XXXXX XXXXX' : ''}
+                onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                style={{
+                  width: '100%', padding: '11px 14px', border: '1px solid #dfe6ee',
+                  borderRadius: 8, fontSize: 14, color: '#1e293b',
+                  background: editing ? '#fff' : '#f8fafc', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Location</label>
+              <input type="text" value={form.location} readOnly={!editing}
+                placeholder={editing ? 'City, Country' : ''}
+                onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+                style={{
+                  width: '100%', padding: '11px 14px', border: '1px solid #dfe6ee',
+                  borderRadius: 8, fontSize: 14, color: '#1e293b',
+                  background: editing ? '#fff' : '#f8fafc', outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>Role</label>
+              <input type="text" value={displayRole} readOnly
+                style={{
+                  width: '100%', padding: '11px 14px', border: '1px solid #dfe6ee',
+                  borderRadius: 8, fontSize: 14, color: '#64748b',
+                  background: '#f1f5f9', outline: 'none', boxSizing: 'border-box', cursor: 'default',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
